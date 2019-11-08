@@ -44,6 +44,17 @@ namespace MazeGen
         private bool generateCouldStep;
 
 
+        void OnDrawGizmos()
+        //void OnDrawGizmosSelected()
+        {
+            Vector3 gizCenter = transform.position + new Vector3 ((xSize * cellSpacing), (ySize * cellSpacing));
+            Vector3 gizSize   = new Vector3 ((xSize * cellSpacing * 2) + cellSpacing, (ySize * cellSpacing * 2) + cellSpacing);
+
+            Gizmos.color = new Color (1, 1, 0, 0.75F);
+            Gizmos.DrawCube (gizCenter, gizSize);
+        }
+
+
         // Start is called before the first frame update
         void Start()
         {
