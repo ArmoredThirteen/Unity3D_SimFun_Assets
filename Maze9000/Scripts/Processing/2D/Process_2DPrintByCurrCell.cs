@@ -139,7 +139,9 @@ namespace MazeGen.Processing
             }
             else
             {
+#if !USE_DESTROY
                 objMap[x, y, wallI].transform.localPosition = new Vector3 (10000, 10000, 10000);
+#endif
             }
 
             //objMap[x, y, wallI].transform.position = newPos;

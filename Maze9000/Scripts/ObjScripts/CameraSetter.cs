@@ -18,7 +18,8 @@ public class CameraSetter : MonoBehaviour
         Vector3 camCenter = mazeGenObj.transform.position + new Vector3 ((mazeGenObj.xSize * mazeGenObj.cellSpacing), (mazeGenObj.ySize * mazeGenObj.cellSpacing));
         float orthoSize = Mathf.Max ((mazeGenObj.xSize * mazeGenObj.cellSpacing * 2) + mazeGenObj.cellSpacing, (mazeGenObj.ySize * mazeGenObj.cellSpacing * 2) + mazeGenObj.cellSpacing);
 
+        centeredCam.aspect = (float)mazeGenObj.xSize / mazeGenObj.ySize;
         centeredCam.transform.position = camCenter + camOffset;
-        centeredCam.orthographicSize = (orthoSize * orthoSizeScale) + orthoSizeAdd;
+        centeredCam.orthographicSize = Mathf.Floor(orthoSize * orthoSizeScale) + orthoSizeAdd;
     }
 }
