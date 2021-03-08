@@ -3,11 +3,10 @@ using System.Collections.Generic;
 using UnityEngine;
 
 
-namespace ATE
+namespace ATE.SortBots
 {
-	public class #SCRIPTNAME# : ATEObject
+	public class BotBox : ATEObject
 	{
-		
-		
+        public BoxTypes boxType;
 	}
 }
