@@ -22,6 +22,9 @@ namespace ATE.SortBots
 
         public int botsCount = 2;
         public int boxesCount = 15;
+
+        public bool showCellGizmos = true;
+        public bool showBorderGizmos = true;
         
 
         private void Awake()
@@ -31,34 +34,40 @@ namespace ATE.SortBots
 
         void OnDrawGizmos()
         {
-            // Display each spawning location
-            float startX = transform.position.x - ((cellsX - 1) * cellSpacing * 0.5f);
-            float startZ = transform.position.z - ((cellsZ - 1) * cellSpacing * 0.5f);
-            Gizmos.color = Color.yellow;
+            if (showCellGizmos)
+            {
+                // Display each spawning location
+                float startX = transform.position.x - ((cellsX - 1) * cellSpacing * 0.5f);
+                float startZ = transform.position.z - ((cellsZ - 1) * cellSpacing * 0.5f);
+                Gizmos.color = Color.yellow;
 
-            for (int x = 0; x < cellsX; x++)
-                for(int z = 0; z < cellsZ; z++)
-                {
-                    float xPos = startX + (x * cellSpacing);
-                    float zPos = startZ + (z * cellSpacing);
-                    Gizmos.DrawSphere(new Vector3(xPos, 0, zPos), 0.5f);
-                }
+                for (int x = 0; x < cellsX; x++)
+                    for (int z = 0; z < cellsZ; z++)
+                    {
+                        float xPos = startX + (x * cellSpacing);
+                        float zPos = startZ + (z * cellSpacing);
+                        Gizmos.DrawSphere(new Vector3(xPos, 0, zPos), 0.5f);
+                    }
+            }
 
-            // Display the 4 bounding sides of the arena
-            float sizeX = cellSpacing * cellsX * 0.5f;
-            float sizeZ = cellSpacing * cellsZ * 0.5f;
-            Gizmos.color = Color.red;
+            if (showBorderGizmos)
+            {
+                // Display the 4 bounding sides of the arena
+                float sizeX = cellSpacing * cellsX * 0.5f;
+                float sizeZ = cellSpacing * cellsZ * 0.5f;
+                Gizmos.color = Color.red;
 
-            Vector3 posXposZ = new Vector3(sizeX, 0, sizeZ);
-            Vector3 posXnegZ = new Vector3(sizeX, 0, -sizeZ);
-            Vector3 negXposZ = new Vector3(-sizeX, 0, sizeZ);
-            Vector3 negXnegZ = new Vector3(-sizeX, 0, -sizeZ);
+                Vector3 posXposZ = new Vector3(sizeX, 0, sizeZ);
+                Vector3 posXnegZ = new Vector3(sizeX, 0, -sizeZ);
+                Vector3 negXposZ = new Vector3(-sizeX, 0, sizeZ);
+                Vector3 negXnegZ = new Vector3(-sizeX, 0, -sizeZ);
 
-            // PosX, negX, posZ, negZ
-            Gizmos.DrawLine(posXposZ, posXnegZ);
-            Gizmos.DrawLine(negXposZ, negXnegZ);
-            Gizmos.DrawLine(posXposZ, negXposZ);
-            Gizmos.DrawLine(posXnegZ, negXnegZ);
+                // PosX, negX, posZ, negZ
+                Gizmos.DrawLine(posXposZ, posXnegZ);
+                Gizmos.DrawLine(negXposZ, negXnegZ);
+                Gizmos.DrawLine(posXposZ, negXposZ);
+                Gizmos.DrawLine(posXnegZ, negXnegZ);
+            }
         }
 
 

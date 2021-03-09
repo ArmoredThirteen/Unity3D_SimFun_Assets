@@ -208,7 +208,7 @@ MonoBehaviour:
   m_Name: 
   m_EditorClassIdentifier: 
   moveSpeed: 0.1
-  castDist: 1
+  castDist: 0.5
   turnSpeed: 2
   minTurnAngle: 0
   maxTurnAngle: 90
