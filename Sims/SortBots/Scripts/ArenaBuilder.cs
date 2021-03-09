@@ -31,10 +31,11 @@ namespace ATE.SortBots
 
         void OnDrawGizmos()
         {
-            float startX = transform.position.x - ((cellsX - 1) * cellSpacing / 2.0f);
-            float startZ = transform.position.z - ((cellsZ - 1) * cellSpacing / 2.0f);
-
+            // Display each spawning location
+            float startX = transform.position.x - ((cellsX - 1) * cellSpacing * 0.5f);
+            float startZ = transform.position.z - ((cellsZ - 1) * cellSpacing * 0.5f);
             Gizmos.color = Color.yellow;
+
             for (int x = 0; x < cellsX; x++)
                 for(int z = 0; z < cellsZ; z++)
                 {
@@ -42,13 +43,29 @@ namespace ATE.SortBots
                     float zPos = startZ + (z * cellSpacing);
                     Gizmos.DrawSphere(new Vector3(xPos, 0, zPos), 0.5f);
                 }
+
+            // Display the 4 bounding sides of the arena
+            float sizeX = cellSpacing * cellsX * 0.5f;
+            float sizeZ = cellSpacing * cellsZ * 0.5f;
+            Gizmos.color = Color.red;
+
+            Vector3 posXposZ = new Vector3(sizeX, 0, sizeZ);
+            Vector3 posXnegZ = new Vector3(sizeX, 0, -sizeZ);
+            Vector3 negXposZ = new Vector3(-sizeX, 0, sizeZ);
+            Vector3 negXnegZ = new Vector3(-sizeX, 0, -sizeZ);
+
+            // PosX, negX, posZ, negZ
+            Gizmos.DrawLine(posXposZ, posXnegZ);
+            Gizmos.DrawLine(negXposZ, negXnegZ);
+            Gizmos.DrawLine(posXposZ, negXposZ);
+            Gizmos.DrawLine(posXnegZ, negXnegZ);
         }
 
 
         public void GenerateArena()
         {
-            float startX = transform.position.x - ((cellsX - 1) * cellSpacing / 2.0f);
-            float startZ = transform.position.z - ((cellsZ - 1) * cellSpacing / 2.0f);
+            float startX = transform.position.x - ((cellsX - 1) * cellSpacing * 0.5f);
+            float startZ = transform.position.z - ((cellsZ - 1) * cellSpacing * 0.5f);
 
             bool[,] hasObj = new bool[cellsX, cellsZ];
 
@@ -85,11 +102,8 @@ namespace ATE.SortBots
                 BotBox newBox = GameObject.Instantiate<BotBox>(boxPrefab, transform);
                 newBox.transform.position = new Vector3(xPos, 0.25f, zPos);
             }
-        }
 
-        private void InstantiateAt(GameObject prefab, float xPos, float yPos, float zPos)
-        {
-            
+            ScaleArena();
         }
 
         private Vector2Int GetNextEmpty(bool[,] hasObj)
@@ -103,6 +117,35 @@ namespace ATE.SortBots
             }
 
             return new Vector2Int(x, z);
+        }
+
+        [ContextMenu("Scale Arena")]
+        private void ScaleArena()
+        {
+            // Place and scale arena components
+            float scaleX = (cellSpacing * cellsX) + 2;
+            float scaleZ = (cellSpacing * cellsZ) + 2;
+            float placeX = cellSpacing * cellsX * 0.5f;
+            float placeZ = cellSpacing * cellsZ * 0.5f;
+
+            // Floor
+            floor.transform.localScale = new Vector3(scaleX, 1, scaleZ);
+            
+            // Wall X Positive
+            wallXPos.transform.localPosition = new Vector3(placeX, 0, 0);
+            wallXPos.transform.localScale = new Vector3(1, 1, scaleZ);
+            
+            // Wall X Negative
+            wallXNeg.transform.localPosition = new Vector3(-placeX, 0, 0);
+            wallXNeg.transform.localScale = new Vector3(1, 1, scaleZ);
+            
+            // Wall Z Positive
+            wallZPos.transform.localPosition = new Vector3(0, 0, placeZ);
+            wallZPos.transform.localScale = new Vector3(scaleX, 1, 1);
+            
+            // Wall Z Negative
+            wallZNeg.transform.localPosition = new Vector3(0, 0, -placeZ);
+            wallZNeg.transform.localScale = new Vector3(scaleX, 1, 1);
         }
 
     }
