@@ -150,7 +150,7 @@ MonoBehaviour:
   m_Script: {fileID: 11500000, guid: fd68696f6a82aeb4ea8679035dc836af, type: 3}
   m_Name: 
   m_EditorClassIdentifier: 
-  updatesPerSecond: 100
+  updatesPerSecond: 25000
 --- !u!4 &101108430
 Transform:
   m_ObjectHideFlags: 0
