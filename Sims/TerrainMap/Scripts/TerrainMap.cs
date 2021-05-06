@@ -7,62 +7,110 @@ public class TerrainMap : MonoBehaviour
 {
     public Terrain terrain;
     
-    public int heightSeed = 0;
-    public float heightScale = 1;
-    public int heightOctaves = 1;
+    public int seed = 0;
+    public float frequency = 1;
+    public int octaves = 1;
     public float heightExponent = 1;
+
+    // Min/Max height values for normalizing between 0 and 1
+    private float minHeight;
+    private float maxHeight;
 
 
     [ContextMenu ("Generate")]
     public void Generate()
     {
-        GenerateHeight ();
+        // Get the heightmap and new texture
+        int resolution = terrain.terrainData.heightmapResolution;
+        int randSeed = seed > 0 ? seed : Random.Range(int.MinValue, int.MaxValue);
+        float[,] heightMap = GenerateHeight(resolution, resolution, randSeed);
+        Texture2D texture = GenerateTexture(heightMap);
 
-        Debug.Log ("Complete");
+        // Apply heightmap and texture
+        terrain.terrainData.SetHeights(0, 0, heightMap);
+        terrain.terrainData.terrainLayers[0].diffuseTexture = texture;
 
+        // Set scene dirty for saving
         UnityEditor.EditorUtility.SetDirty (this.gameObject);
         UnityEngine.SceneManagement.Scene currScene = UnityEditor.SceneManagement.EditorSceneManager.GetActiveScene ();
         UnityEditor.SceneManagement.EditorSceneManager.MarkSceneDirty(currScene);
     }
 
-    public void GenerateHeight()
+    public float[,] GenerateHeight(int xSize, int ySize, int randSeed)
     {
+        SimplexNoise.Seed = randSeed;
+        float[,] heightMap = new float[ySize, xSize];
+        
+        minHeight = float.MaxValue;
+        maxHeight = float.MinValue;
+
+        // Generate noise per pixel
+        for (int y = 0; y < ySize; y++)
+            for (int x = 0; x < xSize; x++)
+            {
+                float nX = ((float)x / xSize);
+                float nY = ((float)y / ySize);
+
+                float height = 0;
+                float amplitudeSum = 0;
+                
+                // For each octave
+                for (int oct = 0; oct < octaves; oct++)
+                {
+                    float frequencyMult = Mathf.Pow(2, oct);
+                    float amplitude = 1.0f / frequencyMult;
+                    amplitudeSum += amplitude;
+
+                    height += SimplexNoise.CalcPixel2D(nX, nY, frequency * frequencyMult) * amplitude;
+                }
+
+                height = Mathf.Pow(height / amplitudeSum, heightExponent);
+
+                minHeight = Mathf.Min(minHeight, height);
+                maxHeight = Mathf.Max(maxHeight, height);
+
+                heightMap[y, x] = height;
+            }
+
+        return heightMap;
+    }
+
+    public Texture2D GenerateTexture(float[,] heightMap)
+    {
+        // Set terrain layer width/length to make texture size fill terrain completely instead of tiling
+        int width = (int)terrain.terrainData.size.x;
+        int length = (int)terrain.terrainData.size.z;
+        terrain.terrainData.terrainLayers[0].tileSize = new Vector2(width, length);
+        
+        // Set texture size to match terrain resolution / heightmap size
         int resolution = terrain.terrainData.heightmapResolution;
-
-        SimplexNoise.Seed = heightSeed > 0 ? heightSeed : Random.Range (int.MinValue, int.MaxValue);
-        //float[,] heightNoise = SimplexNoise.Noise.Calc2D (resolution, resolution, heightScale);
-
-        float[,] heightNoise = new float[resolution, resolution];
-
-        float lowest = int.MaxValue;
-        float highest = int.MinValue;
-
+        Texture2D texture = terrain.terrainData.terrainLayers[0].diffuseTexture;
+        texture.Resize(resolution, resolution);
+        
+        // Color each pixel
         for (int y = 0; y < resolution; y++)
             for (int x = 0; x < resolution; x++)
             {
-                float nX = ((float)x / resolution);
-                float nY = ((float)y / resolution);
+                // Get scaled height
+                float height = (heightMap[y, x] - minHeight) / (maxHeight - minHeight);
 
-                float noise = 0;
+                // Determine color
+                Color color = Color.white;
 
-                for (int i = 0; i < heightOctaves; i++)
-                {
-                    float frequency = Mathf.Pow (2, i + 1);
-                    float amplitude = 1.0f / frequency;
-                    noise += SimplexNoise.CalcPixel2D (nX + (i * 100), nY + (i * 100), heightScale * frequency) * amplitude;
-                }
+                if (height < 0.05)
+                    color = Color.blue;
+                else if (height < 0.1)
+                    color = Color.yellow;
+                else if (height < 0.2)
+                    color = new Color(0.65f, 0.15f, 0.15f);
+                else if (height < 0.6)
+                    color = Color.green;
 
-                noise = noise / heightOctaves;
-                lowest = Mathf.Min (noise, lowest);
-                highest = Mathf.Max (noise, highest);
-
-                noise = Mathf.Pow (noise, heightExponent);
-
-                heightNoise[y, x] = noise;
+                texture.SetPixel(x, y, color);
             }
 
-        Debug.Log ($"L: {lowest}, H: {highest}");
-        terrain.terrainData.SetHeights (0, 0, heightNoise);
+        texture.Apply();
+        return texture;
     }
 	
 }

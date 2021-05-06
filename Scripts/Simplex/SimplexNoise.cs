@@ -42,12 +42,12 @@ public static class SimplexNoise
 
     public static float CalcPixel1D(float x, float scale)
     {
-        return Generate (x * scale) * 0.5f + 0.5f;
+        return Generate(x * scale) * 0.5f + 0.5f;
     }
 
     public static float CalcPixel2D(float x, float y, float scale)
     {
-        return Generate (x * scale, y * scale);// * 0.5f + 0.5f;
+        return Generate(x * scale, y * scale) * 0.5f + 0.5f;
     }
 
     public static float CalcPixel3D(float x, float y, float z, float scale)
