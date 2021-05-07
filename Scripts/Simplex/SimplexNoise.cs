@@ -13,6 +13,41 @@ using System;
 /// </summary>
 public static class SimplexNoise
 {
+    #region AddedByATE
+    public static float[,] CalcOctaved2D(int xSize, int ySize, int octaves, float frequency, float heightExponent)
+    {
+        float[,] map = new float[ySize, xSize];
+
+        // Generate noise per pixel
+        for (int y = 0; y < ySize; y++)
+            for (int x = 0; x < xSize; x++)
+            {
+                float nX = ((float)x / xSize);
+                float nY = ((float)y / ySize);
+
+                float height = 0;
+                float amplitudeSum = 0;
+
+                // For each octave
+                for (int oct = 0; oct < octaves; oct++)
+                {
+                    float frequencyMult = (float)Math.Pow(2, oct);
+                    float amplitude = 1.0f / frequencyMult;
+                    amplitudeSum += amplitude;
+
+                    height += CalcPixel2D(nX, nY, frequency * frequencyMult) * amplitude;
+                }
+
+                height = (float)Math.Pow(height / amplitudeSum, heightExponent);
+
+                map[y, x] = height;
+            }
+
+        return map;
+    }
+    #endregion
+
+
     public static float[] Calc1D(int width, float scale)
     {
         var values = new float[width];
