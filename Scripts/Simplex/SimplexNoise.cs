@@ -1,7 +1,7 @@
 ﻿// Simplex Noise for C#
 // Copyright © Benjamin Ward 2019
 // See LICENSE
-// Simplex Noise implementation offering 1D, 2D, and 3D forms w/ values in the range of 0 to 255.
+// Simplex Noise implementation offering 1D, 2D, and 3D forms w/ values in the range of 0 to 1.
 // Based on work by Heikki Törmälä (2012) and Stefan Gustavson (2006).
 
 using System;
@@ -31,15 +31,14 @@ public static class SimplexNoise
                 // For each octave
                 for (int oct = 0; oct < octaves; oct++)
                 {
-                    float frequencyMult = (float)Math.Pow(2, oct);
+                    float frequencyMult = UnityEngine.Mathf.Pow(2, oct);
                     float amplitude = 1.0f / frequencyMult;
                     amplitudeSum += amplitude;
 
                     height += CalcPixel2D(nX, nY, frequency * frequencyMult) * amplitude;
                 }
 
-                height = (float)Math.Pow(height / amplitudeSum, heightExponent);
-
+                height = UnityEngine.Mathf.Pow(height / amplitudeSum, heightExponent);
                 map[y, x] = height;
             }
 

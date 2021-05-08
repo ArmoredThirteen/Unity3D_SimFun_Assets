@@ -14,14 +14,12 @@ namespace ATE.TerrainGen
         public float frequency = 1;
         public float heightExponent = 1;
 
-        // Min/Max height values for normalizing between 0 and 1
-        private float minHeight;
-        private float maxHeight;
-
 
         [ContextMenu("Generate")]
         public void Generate()
         {
+            //Debug.Log("Generating!");
+
             int resolution = terrain.terrainData.heightmapResolution;
 
             // Find and set seeds
@@ -30,12 +28,16 @@ namespace ATE.TerrainGen
             SimplexNoise.Seed = randSeed;
 
             // Build and apply height map
+            //Debug.Log("Base rocks...");
             float[,] rockMap = GenerateRock(resolution, resolution, randSeed);
             terrain.terrainData.SetHeights(0, 0, rockMap);
 
             // Build and apply height texture
+            //Debug.Log("Texturing...");
             Texture2D texture = GenerateTexture(rockMap);
             terrain.terrainData.terrainLayers[0].diffuseTexture = texture;
+
+            Debug.Log("Complete!");
 
             // Set scene dirty for saving
             UnityEditor.EditorUtility.SetDirty(this.gameObject);
@@ -46,18 +48,7 @@ namespace ATE.TerrainGen
         public float[,] GenerateRock(int xSize, int ySize, int randSeed)
         {
             float[,] map = SimplexNoise.CalcOctaved2D(xSize, ySize, octaves, frequency, heightExponent);
-
-            // Find min/max heights for normalizing
-            minHeight = float.MaxValue;
-            maxHeight = float.MinValue;
-
-            for (int y = 0; y < ySize; y++)
-                for (int x = 0; x < xSize; x++)
-                {
-                    minHeight = Mathf.Min(minHeight, map[y,x]);
-                    maxHeight = Mathf.Max(maxHeight, map[y, x]);
-                }
-
+            ArrayHelpers.NormalizeArray2D(map, 0, 1);
             return map;
         }
 
@@ -78,7 +69,7 @@ namespace ATE.TerrainGen
                 for (int x = 0; x < resolution; x++)
                 {
                     // Get scaled height
-                    float height = (heightMap[y, x] - minHeight) / (maxHeight - minHeight);
+                    float height = heightMap[y, x];
 
                     // Determine color
                     Color color = Color.white;

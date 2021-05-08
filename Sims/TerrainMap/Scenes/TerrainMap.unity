@@ -246,8 +246,8 @@ MonoBehaviour:
   m_EditorClassIdentifier: 
   terrain: {fileID: 895441989}
   seed: 1
-  frequency: 2
   octaves: 5
+  frequency: 2
   heightExponent: 4
 --- !u!154 &895441988
 TerrainCollider:
