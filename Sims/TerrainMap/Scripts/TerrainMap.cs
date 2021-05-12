@@ -14,12 +14,15 @@ namespace ATE.TerrainGen
         public float frequency = 1;
         public float heightExponent = 1;
 
+        public bool useWaterErosion = true;
+        public LiquidSettings waterSettings;
+        public int waterErosionIterations = 1000;
+        public int waterDropsPerIteration = 10000;
+
 
         [ContextMenu("Generate")]
         public void Generate()
         {
-            //Debug.Log("Generating!");
-
             int resolution = terrain.terrainData.heightmapResolution;
 
             // Find and set seeds
@@ -28,13 +31,12 @@ namespace ATE.TerrainGen
             SimplexNoise.Seed = randSeed;
 
             // Build and apply height map
-            //Debug.Log("Base rocks...");
-            float[,] rockMap = GenerateRock(resolution, resolution, randSeed);
-            terrain.terrainData.SetHeights(0, 0, rockMap);
+            float[,] heightMap = GenerateHeightmap(resolution, resolution, randSeed);
+            
+            terrain.terrainData.SetHeights(0, 0, heightMap);
 
             // Build and apply height texture
-            //Debug.Log("Texturing...");
-            Texture2D texture = GenerateTexture(rockMap);
+            Texture2D texture = GenerateTexture(heightMap);
             terrain.terrainData.terrainLayers[0].diffuseTexture = texture;
 
             Debug.Log("Complete!");
@@ -45,9 +47,13 @@ namespace ATE.TerrainGen
             UnityEditor.SceneManagement.EditorSceneManager.MarkSceneDirty(currScene);
         }
 
-        public float[,] GenerateRock(int xSize, int ySize, int randSeed)
+        public float[,] GenerateHeightmap(int xSize, int ySize, int randSeed)
         {
             float[,] map = SimplexNoise.CalcOctaved2D(xSize, ySize, octaves, frequency, heightExponent);
+
+            if (useWaterErosion)
+                map = WaterDropEroder.MakeEroded(map, waterSettings, waterErosionIterations, waterDropsPerIteration);
+
             ArrayHelpers.NormalizeArray2D(map, 0, 1);
             return map;
         }

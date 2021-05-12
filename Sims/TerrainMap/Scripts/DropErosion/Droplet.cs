@@ -7,15 +7,25 @@ namespace ATE.TerrainGen
 {
 	public class Droplet
 	{
-        LiquidSettings settings;
-        decimal volume;
-        decimal dirt;
-		
+        public LiquidSettings settings;
 
-        public Droplet()
+        public float xPos;
+        public float yPos;
+
+        public float volume;
+        public float dirt;
+
+        public int lifetime;
+
+
+        public Droplet(LiquidSettings theSettings, float startXPos, float startYPos, float startVolume, float startDirt)
         {
-
+            xPos = startXPos;
+            yPos = startYPos;
+            settings = theSettings;
+            volume = startVolume;
+            dirt = startDirt;
         }
 
-	}
+    }
 }

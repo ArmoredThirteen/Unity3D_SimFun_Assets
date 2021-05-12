@@ -12,9 +12,12 @@ namespace ATE
             float minVal = float.MaxValue;
             float maxVal = float.MinValue;
 
+            int xLen = theAra.GetLength(1);
+            int yLen = theAra.GetLength(0);
+
             // Get the min and max values
-            for (int y = 0; y < theAra.GetLength(0); y++)
-                for (int x = 0; x < theAra.GetLength(1); x++)
+            for (int y = 0; y < yLen; y++)
+                for (int x = 0; x < xLen; x++)
                 {
                     minVal = Mathf.Min(minVal, theAra[y, x]);
                     maxVal = Mathf.Max(maxVal, theAra[y, x]);
@@ -22,8 +25,8 @@ namespace ATE
 
             // Normalize everything
             float mult = 1 / (maxVal - minVal);
-            for (int y = 0; y < theAra.GetLength(0); y++)
-                for (int x = 0; x < theAra.GetLength(1); x++)
+            for (int y = 0; y < yLen; y++)
+                for (int x = 0; x < xLen; x++)
                 {
                     theAra[y, x] = (theAra[y, x] - minVal) * mult;
                 }
