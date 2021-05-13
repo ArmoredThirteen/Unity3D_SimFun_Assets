@@ -58,7 +58,7 @@ namespace ATE.TerrainGen
                 int yInd = (int)drop.yPos;
 
                 // Find direction of flow and get new drop location
-                Vector3 downDir = GetFlowDir(map, drop).Zof(0).normalized * 2;
+                Vector3 downDir = GetFlowDir(map, drop).Zof(0).normalized;
                 //float lowestHeight = GetLowestHeight(map, xInt, yInt);
                 drop.xPos = drop.xPos + downDir.x;
                 drop.yPos = drop.yPos + downDir.y;
@@ -75,8 +75,6 @@ namespace ATE.TerrainGen
         {
             int xInd = (int)drop.xPos;
             int yInd = (int)drop.yPos;
-            float xOff = drop.xPos - xInd;
-            float yOff = drop.yPos - yInd;
 
             // Get the heights of the 4 bordering cells
             // If out of bounds, use height of map[y,x]
@@ -85,7 +83,7 @@ namespace ATE.TerrainGen
             float posX = GetHeightPosX(map, xInd, yInd);
             float posY = GetHeightPosY(map, xInd, yInd);
 
-            Vector3 normal = new Vector3(negX - posX, negY - posY, 2) * 0.5f;
+            Vector3 normal = new Vector3(negX - posX, negY - posY, -4);
             return normal.normalized;
         }
 

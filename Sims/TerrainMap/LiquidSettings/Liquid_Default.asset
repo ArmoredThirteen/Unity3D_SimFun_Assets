@@ -12,7 +12,7 @@ MonoBehaviour:
   m_Script: {fileID: 11500000, guid: 4cf86568ab89eb24ba2eee0af6a53a6c, type: 3}
   m_Name: Liquid_Default
   m_EditorClassIdentifier: 
-  maxLifetime: 200
+  maxLifetime: 100
   dirtCapacity: 4
   minDirt: 0.01
   grabSpeed: 0.25
