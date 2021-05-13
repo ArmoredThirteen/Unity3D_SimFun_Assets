@@ -79,7 +79,7 @@ namespace ATE.TerrainGen
                     float height = heightMap[y, x];
 
                     // Determine color
-                    /*Color color = Color.white;
+                    Color color = Color.white;
 
                     if (height < 0.05)
                         color = Color.blue;
@@ -90,8 +90,8 @@ namespace ATE.TerrainGen
                     else if (height < 0.6)
                         color = Color.green;
 
-                    texture.SetPixel(x, y, color);*/
-                    texture.SetPixel(x, y, new Color(1, 1, 1));
+                    texture.SetPixel(x, y, color);
+                    //texture.SetPixel(x, y, new Color(1, 1, 1));
                 }
 
             texture.Apply();

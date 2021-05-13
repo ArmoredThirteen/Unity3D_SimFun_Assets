@@ -70,6 +70,9 @@ namespace ATE.TerrainGen
                 // Early exit if cell hasn't changed yet
                 if (xInd == xIndNew && yInd == yIndNew)
                     continue;
+                if (xIndNew < 0 || xIndNew >= xLen
+                    || yIndNew < 0 || yIndNew >= yLen)
+                    continue;
 
                 //float lowestHeight = GetLowestHeight(map, xInd, yInd);
                 float dHeight = map[yIndNew, xIndNew] - map[yInd, xInd];
@@ -85,7 +88,7 @@ namespace ATE.TerrainGen
                 if (drop.dirt > totalCapacity)
                 {
                     float depositAmount = (drop.dirt - totalCapacity) * drop.settings.depositSpeed;
-                    Debug.Log(depositAmount);
+                    //Debug.Log(depositAmount);
                     drop.dirt -= depositAmount;
                     map[yInd, xInd] += depositAmount;
                 }
