@@ -15,6 +15,6 @@ MonoBehaviour:
   maxLifetime: 100
   dirtCapacity: 4
   minDirt: 0.01
-  grabSpeed: 0.25
-  dropSpeed: 0.25
+  erodeSpeed: 0.1
+  depositSpeed: 0.1
   evapSpeed: 0.01

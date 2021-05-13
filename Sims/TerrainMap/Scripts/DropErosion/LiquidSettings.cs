@@ -13,11 +13,20 @@ namespace ATE.TerrainGen
         public float minDirt = 0.01f;
 
         [Range(0,1)]
-        public float grabSpeed = 0.25f;
+        public float erodeSpeed = 0.25f;
         [Range(0, 1)]
-        public float dropSpeed = 0.25f;
+        public float depositSpeed = 0.25f;
         [Range(0, 1)]
         public float evapSpeed = 0.01f;
-		
+
+        public float[,] erosionBrush =
+        {
+            {0.0f, 0.2f, 0.3f, 0.2f, 0.0f},
+            {0.2f, 0.4f, 0.7f, 0.4f, 0.2f},
+            {0.3f, 0.7f, 1.0f, 0.7f, 0.3f},
+            {0.2f, 0.4f, 0.7f, 0.4f, 0.2f},
+            {0.0f, 0.2f, 0.3f, 0.2f, 0.0f}
+        };
+
 	}
 }

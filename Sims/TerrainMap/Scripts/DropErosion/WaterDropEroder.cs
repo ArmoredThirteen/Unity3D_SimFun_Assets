@@ -29,9 +29,11 @@ namespace ATE.TerrainGen
             // Clear old drops
             for (int k = drops.Count - 1; k >= 0; k--)
             {
-                if (drops[k].lifetime >= drops[k].settings.maxLifetime
-                    || drops[k].xPos < 0 || drops[k].xPos > maxX
-                    || drops[k].yPos < 0 || drops[k].yPos > maxY)
+                Droplet drop = drops[k];
+                if (drop.lifetime >= drop.settings.maxLifetime
+                    || drop.volume <= 0
+                    || drop.xPos < 0 || drop.xPos > maxX
+                    || drop.yPos < 0 || drop.yPos > maxY)
                     drops.RemoveAt(k);
             }
 
@@ -59,14 +61,47 @@ namespace ATE.TerrainGen
 
                 // Find direction of flow and get new drop location
                 Vector3 downDir = GetFlowDir(map, drop).Zof(0).normalized;
-                //float lowestHeight = GetLowestHeight(map, xInt, yInt);
                 drop.xPos = drop.xPos + downDir.x;
                 drop.yPos = drop.yPos + downDir.y;
 
-                if (xInd != (int)drop.xPos && yInd != (int)drop.yPos)
-                    map[yInd, xInd] += 0.02f;
+                int xIndNew = (int)drop.xPos;
+                int yIndNew = (int)drop.yPos;
+
+                // Early exit if cell hasn't changed yet
+                if (xInd == xIndNew && yInd == yIndNew)
+                    continue;
+
+                //float lowestHeight = GetLowestHeight(map, xInd, yInd);
+                float dHeight = map[yIndNew, xIndNew] - map[yInd, xInd];
+
+                float totalCapacity = Mathf.Max(
+                    drop.settings.minDirt,
+                    drop.settings.dirtCapacity * -dHeight/* * drop.volume*/);
+
+                /*if (i % 500 == 0)
+                    Debug.Log(map[yInd, xInd] + " : " + map[yIndNew, xIndNew]);*/
+                
+                // Holding too much dirt, deposit some
+                if (drop.dirt > totalCapacity)
+                {
+                    float depositAmount = (drop.dirt - totalCapacity) * drop.settings.depositSpeed;
+                    Debug.Log(depositAmount);
+                    drop.dirt -= depositAmount;
+                    map[yInd, xInd] += depositAmount;
+                }
+                // Pick up some dirt
+                else
+                {
+                    float erodeAmount = Mathf.Min((totalCapacity - drop.dirt) * drop.settings.erodeSpeed, -dHeight);
+                    drop.dirt += erodeAmount;
+                    map[yInd, xInd] -= erodeAmount;
+                }
+
+                // Slowly reduce amount of water
+                drop.volume *= (1 - drop.settings.evapSpeed);
             }
         }
+
 
         // Return true if x2/y2 is lower than x1/y1
         // Return false if higher, same height, or out of bounds

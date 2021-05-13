@@ -50,11 +50,12 @@ namespace ATE.TerrainGen
         public float[,] GenerateHeightmap(int xSize, int ySize, int randSeed)
         {
             float[,] map = SimplexNoise.CalcOctaved2D(xSize, ySize, octaves, frequency, heightExponent);
+            ArrayHelpers.NormalizeArray2D(map, 0, 1);
 
             if (useWaterErosion)
                 map = WaterDropEroder.MakeEroded(map, waterSettings, waterErosionIterations, waterDropsPerIteration);
 
-            ArrayHelpers.NormalizeArray2D(map, 0, 1);
+            //ArrayHelpers.NormalizeArray2D(map, 0, 1);
             return map;
         }
 
@@ -78,7 +79,7 @@ namespace ATE.TerrainGen
                     float height = heightMap[y, x];
 
                     // Determine color
-                    Color color = Color.white;
+                    /*Color color = Color.white;
 
                     if (height < 0.05)
                         color = Color.blue;
@@ -89,7 +90,8 @@ namespace ATE.TerrainGen
                     else if (height < 0.6)
                         color = Color.green;
 
-                    texture.SetPixel(x, y, color);
+                    texture.SetPixel(x, y, color);*/
+                    texture.SetPixel(x, y, new Color(1, 1, 1));
                 }
 
             texture.Apply();
