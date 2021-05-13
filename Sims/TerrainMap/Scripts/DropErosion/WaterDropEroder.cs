@@ -15,7 +15,7 @@ namespace ATE.TerrainGen
 
             for (int i = 0; i < iterations; i++)
             {
-                UpdateDropCounts(drops, map.GetLength(1), map.GetLength(0), dropsPerIteration, liquidSettings);
+                UpdateDropCounts(drops, map.GetLength(1) - 1, map.GetLength(0) - 1, dropsPerIteration, liquidSettings);
                 Iterate(map, drops);
             }
 
@@ -58,48 +58,35 @@ namespace ATE.TerrainGen
                 int yInd = (int)drop.yPos;
 
                 // Find direction of flow and get new drop location
-                Vector3 downDir = GetFlowDir(map, xInd, yInd).Zof(0).normalized;
+                Vector3 downDir = GetFlowDir(map, drop).Zof(0).normalized * 2;
                 //float lowestHeight = GetLowestHeight(map, xInt, yInt);
                 drop.xPos = drop.xPos + downDir.x;
                 drop.yPos = drop.yPos + downDir.y;
 
                 if (xInd != (int)drop.xPos && yInd != (int)drop.yPos)
-                    map[xInd, yInd] += 0.02f;
+                    map[yInd, xInd] += 0.02f;
             }
         }
 
         // Return true if x2/y2 is lower than x1/y1
         // Return false if higher, same height, or out of bounds
         // https://stackoverflow.com/questions/49640250/calculate-normals-from-heightmap
-        public static Vector3 GetFlowDir(float[,] map, int x, int y)
+        public static Vector3 GetFlowDir(float[,] map, Droplet drop)
         {
+            int xInd = (int)drop.xPos;
+            int yInd = (int)drop.yPos;
+            float xOff = drop.xPos - xInd;
+            float yOff = drop.yPos - yInd;
+
             // Get the heights of the 4 bordering cells
             // If out of bounds, use height of map[y,x]
-            float negX = GetHeightNegX(map, x, y);
-            float negY = GetHeightNegY(map, x, y);
-            float posX = GetHeightPosX(map, x, y);
-            float posY = GetHeightPosY(map, x, y);
+            float negX = GetHeightNegX(map, xInd, yInd);
+            float negY = GetHeightNegY(map, xInd, yInd);
+            float posX = GetHeightPosX(map, xInd, yInd);
+            float posY = GetHeightPosY(map, xInd, yInd);
 
-            //Vector3 normal = new Vector3(2 * (posY - negY), 2 * (posX - negX), -4);
-            //return normal.normalized;
-
-            /*int coordX = (int)posX;
-            int coordY = (int)posY;
-
-            // Calculate droplet's offset inside the cell (0,0) = at NW node, (1,1) = at SE node
-            float x = posX - coordX;
-            float y = posY - coordY;
-
-            // Calculate heights of the four nodes of the droplet's cell
-            int nodeIndexNW = coordY * mapSize + coordX;
-            float heightNW = nodes[nodeIndexNW];
-            float heightNE = nodes[nodeIndexNW + 1];
-            float heightSW = nodes[nodeIndexNW + mapSize];
-            float heightSE = nodes[nodeIndexNW + mapSize + 1];
-
-            // Calculate droplet's direction of flow with bilinear interpolation of height difference along the edges
-            float gradientX = (heightNE - heightNW) * (1 - y) + (heightSE - heightSW) * y;
-            float gradientY = (heightSW - heightNW) * (1 - x) + (heightSE - heightNE) * x;*/
+            Vector3 normal = new Vector3(negX - posX, negY - posY, 2) * 0.5f;
+            return normal.normalized;
         }
 
         public static float GetLowestHeight(float[,] map, int x, int y)
