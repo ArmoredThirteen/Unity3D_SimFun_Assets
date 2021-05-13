@@ -23,13 +23,17 @@ namespace ATE.TerrainGen
 
             return map;
         }
-		
+
         public static void UpdateDropCounts(List<Droplet> drops, int maxX, int maxY, int dropsToAdd, LiquidSettings liquidSettings)
         {
             // Clear old drops
             for (int k = drops.Count - 1; k >= 0; k--)
-                if (drops[k].lifetime >= drops[k].settings.maxLifetime)
+            {
+                if (drops[k].lifetime >= drops[k].settings.maxLifetime
+                    || drops[k].xPos < 0 || drops[k].xPos > maxX
+                    || drops[k].yPos < 0 || drops[k].yPos > maxY)
                     drops.RemoveAt(k);
+            }
 
             // Add new drops
             for (int k = 0; k < dropsToAdd; k++)
@@ -50,30 +54,88 @@ namespace ATE.TerrainGen
                 Droplet drop = drops[i];
                 drop.lifetime++;
 
-                int xPos = (int)drop.xPos;
-                int yPos = (int)drop.yPos;
-                int lowX = xPos;
-                int lowY = yPos;
+                int xInd = (int)drop.xPos;
+                int yInd = (int)drop.yPos;
 
-                // Negative X
-                if (IsLower(map, xPos, yPos, xPos - 1, yPos))
-                {
-                    lowX = xPos - 1;
-                    lowY = yPos;
-                }
-                // Positive X
-                // Negative Y
-                // Positive Y
+                // Find direction of flow and get new drop location
+                Vector3 downDir = GetFlowDir(map, xInd, yInd).Zof(0).normalized;
+                //float lowestHeight = GetLowestHeight(map, xInt, yInt);
+                drop.xPos = drop.xPos + downDir.x;
+                drop.yPos = drop.yPos + downDir.y;
+
+                if (xInd != (int)drop.xPos && yInd != (int)drop.yPos)
+                    map[xInd, yInd] += 0.02f;
             }
         }
 
         // Return true if x2/y2 is lower than x1/y1
         // Return false if higher, same height, or out of bounds
-        public static bool IsLower(float[,] map, int x1, int y1, int x2, int y2)
+        // https://stackoverflow.com/questions/49640250/calculate-normals-from-heightmap
+        public static Vector3 GetFlowDir(float[,] map, int x, int y)
         {
-            //TODO: Actually do this
-            return false;
+            // Get the heights of the 4 bordering cells
+            // If out of bounds, use height of map[y,x]
+            float negX = GetHeightNegX(map, x, y);
+            float negY = GetHeightNegY(map, x, y);
+            float posX = GetHeightPosX(map, x, y);
+            float posY = GetHeightPosY(map, x, y);
+
+            //Vector3 normal = new Vector3(2 * (posY - negY), 2 * (posX - negX), -4);
+            //return normal.normalized;
+
+            /*int coordX = (int)posX;
+            int coordY = (int)posY;
+
+            // Calculate droplet's offset inside the cell (0,0) = at NW node, (1,1) = at SE node
+            float x = posX - coordX;
+            float y = posY - coordY;
+
+            // Calculate heights of the four nodes of the droplet's cell
+            int nodeIndexNW = coordY * mapSize + coordX;
+            float heightNW = nodes[nodeIndexNW];
+            float heightNE = nodes[nodeIndexNW + 1];
+            float heightSW = nodes[nodeIndexNW + mapSize];
+            float heightSE = nodes[nodeIndexNW + mapSize + 1];
+
+            // Calculate droplet's direction of flow with bilinear interpolation of height difference along the edges
+            float gradientX = (heightNE - heightNW) * (1 - y) + (heightSE - heightSW) * y;
+            float gradientY = (heightSW - heightNW) * (1 - x) + (heightSE - heightNE) * x;*/
         }
 
-	}
+        public static float GetLowestHeight(float[,] map, int x, int y)
+        {
+            return Mathf.Min(
+                GetHeightNegX(map, x, y),
+                GetHeightPosX(map, x, y),
+                GetHeightNegY(map, x, y),
+                GetHeightPosY(map, x, y)
+                );
+        }
+
+
+        // Gets the height of [x-1,y] but default to [x,y] if out of bounds
+        private static float GetHeightNegX(float[,] map, int x, int y)
+        {
+            return x - 1 < 0 ? map[y, x] : map[y, x - 1];
+        }
+
+        // Gets the height of [x-1,y] but default to [x,y] if out of bounds
+        private static float GetHeightNegY(float[,] map, int x, int y)
+        {
+            return y - 1 < 0 ? map[y, x] : map[y - 1, x];
+        }
+
+        // Gets the height of [x-1,y] but default to [x,y] if out of bounds
+        private static float GetHeightPosX(float[,] map, int x, int y)
+        {
+            return x + 1 >= map.GetLength(1) ? map[y, x] : map[y, x + 1];
+        }
+
+        // Gets the height of [x-1,y] but default to [x,y] if out of bounds
+        private static float GetHeightPosY(float[,] map, int x, int y)
+        {
+            return y + 1 >= map.GetLength(0) ? map[y, x] : map[y + 1, x];
+        }
+
+    }
 }
