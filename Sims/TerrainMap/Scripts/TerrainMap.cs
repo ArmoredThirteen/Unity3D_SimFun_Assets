@@ -74,28 +74,63 @@ namespace ATE.TerrainGen
             // Color each pixel
             for (int y = 0; y < resolution; y++)
                 for (int x = 0; x < resolution; x++)
-                {
-                    // Get scaled height
-                    float height = heightMap[y, x];
-
-                    // Determine color
-                    Color color = Color.white;
-
-                    if (height < 0.05)
-                        color = Color.blue;
-                    else if (height < 0.1)
-                        color = Color.yellow;
-                    else if (height < 0.2)
-                        color = new Color(0.65f, 0.15f, 0.15f);
-                    else if (height < 0.6)
-                        color = Color.green;
-
-                    texture.SetPixel(x, y, color);
-                    //texture.SetPixel(x, y, new Color(1, 1, 1));
-                }
+                    texture.SetPixel(x, y, GetColor_AltWithSteep(heightMap, x, y));
 
             texture.Apply();
             return texture;
+        }
+
+        private Color GetColor_White(float[,] map, int x, int y)
+        {
+            return Color.white;
+        }
+
+        private Color GetColor_AltitudeCutoff(float[,] map, int x, int y)
+        {
+            // Get scaled height
+            float height = map[y, x];
+
+            // Determine color
+            Color color = Color.white;
+
+            if (height < 0.05)
+                color = Color.blue;
+            else if (height < 0.1)
+                color = Color.yellow;
+            else if (height < 0.2)
+                color = new Color(0.65f, 0.15f, 0.15f);
+            else if (height < 0.6)
+                color = Color.green;
+
+            return color;
+        }
+
+        private Color GetColor_Steepness(float[,] map, int x, int y)
+        {
+            float steepness = GetSteepness(x, y);
+            steepness = Mathf.Pow(steepness, 2);
+            return (Color.white * (1 - steepness)) + (Color.red * steepness);
+        }
+
+        private Color GetColor_AltWithSteep(float[,] map, int x, int y)
+        {
+            Color altColor = GetColor_AltitudeCutoff(map, x, y);
+
+            float steepness = GetSteepness(x, y);
+            //steepness = Mathf.Pow(steepness, 2);
+            //return (altColor * (1 - steepness)) + (Color.gray * steepness);
+
+            return steepness > 0.6f ? Color.gray : altColor;
+        }
+
+
+        private float GetSteepness (int x, int y)
+        {
+            int resolution = terrain.terrainData.heightmapResolution;
+            float xPos = (float)x / (resolution - 1);
+            float yPos = (float)y / (resolution - 1);
+
+            return terrain.terrainData.GetSteepness(xPos, yPos) / 90;
         }
 
     }

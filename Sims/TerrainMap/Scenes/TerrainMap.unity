@@ -251,8 +251,8 @@ MonoBehaviour:
   heightExponent: 3.5
   useWaterErosion: 1
   waterSettings: {fileID: 11400000, guid: b7cd95bf7d8604240b2130afe0cb1042, type: 2}
-  waterErosionIterations: 10000
-  waterDropsPerIteration: 50
+  waterErosionIterations: 8000
+  waterDropsPerIteration: 30
 --- !u!154 &895441988
 TerrainCollider:
   m_ObjectHideFlags: 0
