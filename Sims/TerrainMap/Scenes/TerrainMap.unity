@@ -246,9 +246,9 @@ MonoBehaviour:
   m_EditorClassIdentifier: 
   terrain: {fileID: 895441989}
   seed: 1
-  octaves: 4
+  octaves: 5
   frequency: 2
-  heightExponent: 3.5
+  heightExponent: 4
   useWaterErosion: 1
   waterSettings: {fileID: 11400000, guid: b7cd95bf7d8604240b2130afe0cb1042, type: 2}
   waterErosionIterations: 8000

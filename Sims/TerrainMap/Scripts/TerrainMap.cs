@@ -120,7 +120,7 @@ namespace ATE.TerrainGen
             //steepness = Mathf.Pow(steepness, 2);
             //return (altColor * (1 - steepness)) + (Color.gray * steepness);
 
-            return steepness > 0.6f ? Color.gray : altColor;
+            return steepness > 0.65f ? Color.gray : altColor;
         }
 
 
