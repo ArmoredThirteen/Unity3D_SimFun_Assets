@@ -248,11 +248,11 @@ MonoBehaviour:
   seed: 1
   octaves: 5
   frequency: 2
-  heightExponent: 4
+  heightExponent: 3
   useWaterErosion: 1
   waterSettings: {fileID: 11400000, guid: b7cd95bf7d8604240b2130afe0cb1042, type: 2}
-  waterErosionIterations: 8000
-  waterDropsPerIteration: 30
+  waterDropsToErode: 1500000
+  texturingType: 2
 --- !u!154 &895441988
 TerrainCollider:
   m_ObjectHideFlags: 0

@@ -1,4 +1,5 @@
-﻿using System.Collections;
+﻿using System.Linq;
+using System.Collections;
 using System.Collections.Generic;
 using UnityEngine;
 
@@ -7,59 +8,49 @@ namespace ATE.TerrainGen
 {
 	public static class WaterDropEroder
 	{
-		public static float[,] MakeEroded(float[,] startMap, LiquidSettings liquidSettings, int iterations, int dropsPerIteration)
+		public static float[,] MakeEroded(float[,] startMap, LiquidSettings liquidSettings, int dropCount)
         {
             float[,] map = (float[,])startMap.Clone();
 
-            List<Droplet> drops = new List<Droplet>();
-
-            for (int i = 0; i < iterations; i++)
+            for (int i = 0; i < dropCount; i++)
             {
-                UpdateDropCounts(drops, map.GetLength(1) - 1, map.GetLength(0) - 1, dropsPerIteration, liquidSettings);
-                Iterate(map, drops);
+                Vector2 newPos = ArrayHelpers.GetRandomIndex(map);
+                Droplet drop = new Droplet(liquidSettings, newPos.x, newPos.y, 1, 0);
+                ErodeDroplet(map, drop);
             }
-
-            Debug.Log(drops.Count);
 
             return map;
         }
 
-        public static void UpdateDropCounts(List<Droplet> drops, int maxX, int maxY, int dropsToAdd, LiquidSettings liquidSettings)
-        {
-            // Clear old drops
-            for (int k = drops.Count - 1; k >= 0; k--)
-            {
-                Droplet drop = drops[k];
-                if (drop.lifetime >= drop.settings.maxLifetime
-                    || drop.volume <= 0
-                    || drop.xPos < 0 || drop.xPos > maxX
-                    || drop.yPos < 0 || drop.yPos > maxY)
-                    drops.RemoveAt(k);
-            }
-
-            // Add new drops
-            for (int k = 0; k < dropsToAdd; k++)
-            {
-                int xPos = Random.Range(0, maxX);
-                int yPos = Random.Range(0, maxY);
-                drops.Add(new Droplet(liquidSettings, xPos, yPos, 1, 0));
-            }
-        }
-
-        public static void Iterate (float[,] map, List<Droplet> drops)
+        public static void ErodeDroplet(float[,] map, Droplet drop)
         {
             int xLen = map.GetLength(1);
             int yLen = map.GetLength(0);
 
-            for (int i = 0; i < drops.Count; i++)
-            {
-                Droplet drop = drops[i];
-                drop.lifetime++;
+            float[,] brush = drop.settings.GetErosionBrush();
 
+            while (CanDropletRun(drop))
+            {
+                drop.lifetime++;
+                
                 int xInd = (int)drop.xPos;
                 int yInd = (int)drop.yPos;
 
-                // Find direction of flow and get new drop location
+                // If in a pit, fast track evaporation
+                // Deposit dirt up to height of lowest neighbor, reduce liquid volume proportionally
+                if (!IsMovementPossible(map, xInd, yInd))
+                {
+                    float neighborHeight = GetHeightOfLowestNeighbor(map, xInd, yInd);
+                    float depositAmount = Mathf.Min(drop.dirt, neighborHeight - map[yInd, xInd]);
+
+                    // Lower liquid volume proportionally and deposit dirt
+                    drop.volume *= 1 - (drop.dirt / depositAmount);
+                    map[yInd, xInd] += depositAmount;
+
+                    //continue;
+                    break;
+                }
+
                 Vector3 downDir = GetFlowDir(map, drop).Zof(0).normalized;
                 drop.xPos = drop.xPos + downDir.x;
                 drop.yPos = drop.yPos + downDir.y;
@@ -67,42 +58,69 @@ namespace ATE.TerrainGen
                 int xIndNew = (int)drop.xPos;
                 int yIndNew = (int)drop.yPos;
 
-                // Early exit if cell hasn't changed yet
-                if (xInd == xIndNew && yInd == yIndNew)
-                    continue;
-                if (xIndNew < 0 || xIndNew >= xLen
-                    || yIndNew < 0 || yIndNew >= yLen)
+                // Verify new location is in bounds
+                if (!IsInBounds(xLen, yLen, xIndNew, yIndNew))
+                    break;
+                // Hasn't moved enough to do a calculation this iteration
+                if (!HasIndChanged(xInd, yInd, xIndNew, yIndNew))
                     continue;
 
-                //float lowestHeight = GetLowestHeight(map, xInd, yInd);
-                float dHeight = map[yIndNew, xIndNew] - map[yInd, xInd];
+                float dHeight = GetHeightDif(map, xInd, yInd, xIndNew, yIndNew);
 
+                //TODO: What exactly is this doing?
                 float totalCapacity = Mathf.Max(
                     drop.settings.minDirt,
                     drop.settings.dirtCapacity * -dHeight/* * drop.volume*/);
 
-                /*if (i % 500 == 0)
-                    Debug.Log(map[yInd, xInd] + " : " + map[yIndNew, xIndNew]);*/
-                
-                // Holding too much dirt, deposit some
+                // Deposit dirt
                 if (drop.dirt > totalCapacity)
                 {
-                    float depositAmount = (drop.dirt - totalCapacity) * drop.settings.depositSpeed;
-                    //Debug.Log(depositAmount);
-                    drop.dirt -= depositAmount;
-                    map[yInd, xInd] += depositAmount;
+                    float dirtAmount = (drop.dirt - totalCapacity) * drop.settings.depositSpeed;
+                    DepositDirt(map, xInd, yInd, drop, dirtAmount);
                 }
-                // Pick up some dirt
+                // Erode dirt
                 else
                 {
-                    float erodeAmount = Mathf.Min((totalCapacity - drop.dirt) * drop.settings.erodeSpeed, -dHeight);
-                    drop.dirt += erodeAmount;
-                    map[yInd, xInd] -= erodeAmount;
+                    float dirtAmount = Mathf.Min((totalCapacity - drop.dirt) * drop.settings.erodeSpeed, -dHeight);
+                    ErodeDirt(map, brush, xInd, yInd, drop, dirtAmount);
                 }
 
                 // Slowly reduce amount of water
                 drop.volume *= (1 - drop.settings.evapSpeed);
             }
+        }
+
+
+        public static bool CanDropletRun(Droplet droplet)
+        {
+            if (droplet.lifetime >= droplet.settings.maxLifetime)
+                return false;
+            if (droplet.volume <= 0)
+                return false;
+
+            return true;
+        }
+
+        public static bool IsInBounds(int xLen, int yLen, int xInd, int yInd)
+        {
+            if (xInd < 0 || xInd >= xLen)
+                return false;
+            if (yInd < 0 || yInd >= yLen)
+                return false;
+
+            return true;
+        }
+
+        public static bool HasIndChanged(int xInd, int yInd, int xIndNew, int yIndNew)
+        {
+            if (xInd == xIndNew && yInd == yIndNew)
+                return false;
+            return true;
+        }
+
+        public static float GetHeightDif(float[,] map, int xInd, int yInd, int xIndNew, int yIndNew)
+        {
+            return map[yIndNew, xIndNew] - map[yInd, xInd];
         }
 
 
@@ -125,7 +143,12 @@ namespace ATE.TerrainGen
             return normal.normalized;
         }
 
-        public static float GetLowestHeight(float[,] map, int x, int y)
+        public static bool IsMovementPossible(float[,] map, int x, int y)
+        {
+            return map[y, x] > GetHeightOfLowestNeighbor(map, x, y);
+        }
+
+        public static float GetHeightOfLowestNeighbor(float[,] map, int x, int y)
         {
             return Mathf.Min(
                 GetHeightNegX(map, x, y),
@@ -158,6 +181,63 @@ namespace ATE.TerrainGen
         private static float GetHeightPosY(float[,] map, int x, int y)
         {
             return y + 1 >= map.GetLength(0) ? map[y, x] : map[y + 1, x];
+        }
+
+
+        private static void DepositDirt(float[,] map, int xInd, int yInd, Droplet drop, float depositAmount)
+        {
+            drop.dirt -= depositAmount;
+            map[yInd, xInd] += depositAmount;
+        }
+
+        private static void ErodeDirt(float[,] map, float[,] brush, int xInd, int yInd, Droplet drop, float erodeAmount)
+        {
+            //float[,] brush = GetErosionBrush(drop.settings, erodeAmount);
+
+            float lowestNeighborHeight = GetHeightOfLowestNeighbor(map, xInd, yInd);
+
+            int xLen_map = map.GetLength(1);
+            int yLen_map = map.GetLength(0);
+            int xLen_brush = brush.GetLength(1);
+            int yLen_brush = brush.GetLength(0);
+
+            int xOffset = -(xLen_brush / 2);
+            int yOffset = -(yLen_brush / 2);
+
+            for (int y = 0; y < yLen_brush; y++)
+                for (int x = 0; x < xLen_brush; x++)
+                {
+                    int xInd_map = xInd + xOffset + x;
+                    int yInd_map = yInd + yOffset + y;
+
+                    // Out of bounds
+                    if (!IsInBounds(xLen_map, yLen_map, xInd_map, yInd_map))
+                        continue;
+                    // Too low to erode
+                    float heightDif = map[yInd_map, xInd_map] - lowestNeighborHeight;
+                    if (heightDif <= 0)
+                        continue;
+
+                    // Only erode down to lowest neighbor at most
+                    float actualErodeAmount = Mathf.Min(brush[y, x] * erodeAmount, heightDif);
+
+                    drop.dirt += actualErodeAmount;
+                    map[yInd_map, xInd_map] -= actualErodeAmount;
+                }
+        }
+
+
+        private static float[,] GetErosionBrush(LiquidSettings settings, float amount)
+        {
+            float[,] brush = settings.GetErosionBrush ();
+            int xLen = brush.GetLength(1);
+            int yLen = brush.GetLength(0);
+            
+            for (int y = 0; y < yLen; y++)
+                for (int x = 0; x < xLen; x++)
+                    brush[y, x] *= amount;
+
+            return brush;
         }
 
     }

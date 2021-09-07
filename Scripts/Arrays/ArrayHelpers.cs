@@ -7,6 +7,13 @@ namespace ATE
 {
 	public static class ArrayHelpers
 	{
+        public static Vector2 GetRandomIndex(float[,] theAra)
+        {
+            int xPos = Random.Range(0, theAra.GetLength(1) - 1);
+            int yPos = Random.Range(0, theAra.GetLength(0) - 1);
+            return new Vector2(xPos, yPos);
+        }
+
 		public static void NormalizeArray2D(float[,] theAra, float floor, float ceiling)
         {
             float minVal = float.MaxValue;

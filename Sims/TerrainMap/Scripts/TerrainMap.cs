@@ -1,12 +1,24 @@
-﻿using System.Collections;
+﻿using System;
+using System.Collections;
 using System.Collections.Generic;
 using UnityEngine;
+
+using Random = UnityEngine.Random;
 
 
 namespace ATE.TerrainGen
 {
     public class TerrainMap : MonoBehaviour
     {
+        public enum TexturingTypes
+        {
+            White,
+            AltitudeCutoff,
+            Steepness,
+            AltitudeWithSteepness,
+        }
+
+
         public Terrain terrain;
 
         public int seed = 0;
@@ -16,8 +28,12 @@ namespace ATE.TerrainGen
 
         public bool useWaterErosion = true;
         public LiquidSettings waterSettings;
-        public int waterErosionIterations = 1000;
-        public int waterDropsPerIteration = 10000;
+        public int waterDropsToErode = 1000;
+
+        public TexturingTypes texturingType = TexturingTypes.Steepness;
+
+
+        private float[,] heightMap;
 
 
         [ContextMenu("Generate")]
@@ -31,15 +47,11 @@ namespace ATE.TerrainGen
             SimplexNoise.Seed = randSeed;
 
             // Build and apply height map
-            float[,] heightMap = GenerateHeightmap(resolution, resolution, randSeed);
-            
+            heightMap = GenerateHeightmap(resolution, resolution, randSeed);
             terrain.terrainData.SetHeights(0, 0, heightMap);
 
             // Build and apply height texture
-            Texture2D texture = GenerateTexture(heightMap);
-            terrain.terrainData.terrainLayers[0].diffuseTexture = texture;
-
-            Debug.Log("Complete!");
+            GenAndApplyTexture();
 
             // Set scene dirty for saving
             UnityEditor.EditorUtility.SetDirty(this.gameObject);
@@ -53,14 +65,41 @@ namespace ATE.TerrainGen
             ArrayHelpers.NormalizeArray2D(map, 0, 1);
 
             if (useWaterErosion)
-                map = WaterDropEroder.MakeEroded(map, waterSettings, waterErosionIterations, waterDropsPerIteration);
+                map = WaterDropEroder.MakeEroded(map, waterSettings, waterDropsToErode);
 
             //ArrayHelpers.NormalizeArray2D(map, 0, 1);
+
+            Debug.Log("Completed heightmap");
             return map;
         }
 
-        public Texture2D GenerateTexture(float[,] heightMap)
+
+        [ContextMenu("Generate Texture")]
+        public void GenAndApplyTexture()
         {
+            Texture2D texture = GenerateTexture();
+            terrain.terrainData.terrainLayers[0].diffuseTexture = texture;
+        }
+
+        public Texture2D GenerateTexture(/*float[,] heightMap*/)
+        {
+            Func<float[,], int, int, Color> TexturingMethod = GetColor_White;
+            switch (texturingType)
+            {
+                case TexturingTypes.White:
+                    TexturingMethod = GetColor_White;
+                    break;
+                case TexturingTypes.AltitudeCutoff:
+                    TexturingMethod = GetColor_AltitudeCutoff;
+                    break;
+                case TexturingTypes.Steepness:
+                    TexturingMethod = GetColor_Steepness;
+                    break;
+                case TexturingTypes.AltitudeWithSteepness:
+                    TexturingMethod = GetColor_AltWithSteep;
+                    break;
+            }
+
             // Set terrain layer width/length to make texture size fill terrain completely instead of tiling
             int width = (int)terrain.terrainData.size.x;
             int length = (int)terrain.terrainData.size.z;
@@ -74,11 +113,14 @@ namespace ATE.TerrainGen
             // Color each pixel
             for (int y = 0; y < resolution; y++)
                 for (int x = 0; x < resolution; x++)
-                    texture.SetPixel(x, y, GetColor_AltWithSteep(heightMap, x, y));
+                    texture.SetPixel(x, y, TexturingMethod(heightMap, x, y));
 
             texture.Apply();
+
+            Debug.Log("Completed texture");
             return texture;
         }
+
 
         private Color GetColor_White(float[,] map, int x, int y)
         {

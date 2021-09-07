@@ -9,6 +9,8 @@ namespace ATE.TerrainGen
     public class LiquidSettings : ScriptableObject
 	{
         public int maxLifetime = 25;
+        public float minDistChange = 0.01f;
+
         public float dirtCapacity = 4;
         public float minDirt = 0.01f;
 
@@ -19,14 +21,25 @@ namespace ATE.TerrainGen
         [Range(0, 1)]
         public float evapSpeed = 0.01f;
 
-        public float[,] erosionBrush =
+
+        public float[,] GetErosionBrush ()
         {
-            {0.0f, 0.2f, 0.3f, 0.2f, 0.0f},
-            {0.2f, 0.4f, 0.7f, 0.4f, 0.2f},
-            {0.3f, 0.7f, 1.0f, 0.7f, 0.3f},
-            {0.2f, 0.4f, 0.7f, 0.4f, 0.2f},
-            {0.0f, 0.2f, 0.3f, 0.2f, 0.0f}
-        };
+            if (Random.Range(0, 2) == 0)
+                return new float[,] { { 0.85f } };
+
+            return new float[,]
+            {
+                /*{0.0f, 0.2f, 0.3f, 0.2f, 0.0f},
+                {0.2f, 0.4f, 0.7f, 0.4f, 0.2f},
+                {0.3f, 0.7f, 1.0f, 0.7f, 0.3f},
+                {0.2f, 0.4f, 0.7f, 0.4f, 0.2f},
+                {0.0f, 0.2f, 0.3f, 0.2f, 0.0f}*/
+
+                {0.1f, 0.2f, 0.1f},
+                {0.2f, 0.3f, 0.2f},
+                {0.1f, 0.2f, 0.1f}
+            };
+        }
 
 	}
 }
