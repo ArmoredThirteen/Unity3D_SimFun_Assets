@@ -16,6 +16,8 @@ namespace ATE.TerrainGen
             AltitudeCutoff,
             Steepness,
             AltitudeWithSteepness,
+            Eroded,
+            DirtDeposited,
         }
 
 
@@ -32,6 +34,13 @@ namespace ATE.TerrainGen
         public int waterDropsToErode = 1000;
 
         public TexturingTypes texturingType = TexturingTypes.Steepness;
+        public float texture_steepnessPow = 2;
+        public float texture_erodedMult = 15;
+        public float texture_dirtMult = 100;
+        public float texture_altCutoff_blue = 0.05f;
+        public float texture_altCutoff_yellow = 0.1f;
+        public float texture_altCutoff_red = 0.2f;
+        public float texture_altCutoff_green = 0.6f;
 
 
         public TerrainCell[,] map;
@@ -71,11 +80,21 @@ namespace ATE.TerrainGen
             int randSeed = seed > 0 ? seed : Random.Range(int.MinValue, int.MaxValue);
             Random.InitState(randSeed);
             SimplexNoise.Seed = randSeed;
-            
+
             // Build and apply height map
-            SetValsOfType(TerrainValTypes.Rock, GenerateHeightmap(resolution, resolution, randSeed));
-            terrain.terrainData.SetHeights(0, 0, GetAraOfType(TerrainValTypes.Rock));
-            
+            //SetValsOfType(TerrainValTypes.Rock, GenerateHeightmap(resolution, resolution, randSeed));
+            GenerateHeightmap();
+
+            float[,] heightmap = GetAraOfType(TerrainValTypes.Rock);
+            heightmap.Zip(GetAraOfType(TerrainValTypes.Dirt), (x, y) => x + y);
+            terrain.terrainData.SetHeights(0, 0, heightmap);
+
+            //float[,] debugmap = GetAraOfType(TerrainValTypes.Dirt);
+            //float highest = ArrayHelpers.GetHighest(debugmap);
+            //float lowest = ArrayHelpers.GetLowest(debugmap);
+            //float average = ArrayHelpers.GetAverageOfNonZero(debugmap);
+            //Debug.Log("Highest: " + highest + ", Lowest: " + lowest + ", Average: " + average);
+
             // Build and apply height texture
             GenAndApplyTexture();
 
@@ -84,28 +103,27 @@ namespace ATE.TerrainGen
             UnityEngine.SceneManagement.Scene currScene = UnityEditor.SceneManagement.EditorSceneManager.GetActiveScene();
             UnityEditor.SceneManagement.EditorSceneManager.MarkSceneDirty(currScene);
         }
+        
 
+        public void GenerateHeightmap()
+        {
+            float[,] noiseMap = GetNoiseMap(resolution, resolution);
+            SetValsOfType(TerrainValTypes.Rock, noiseMap);
+
+            if (useWaterErosion)
+            {
+                WaterDropEroder eroder = new WaterDropEroder(this);
+                eroder.MakeEroded(waterSettings, waterDropsToErode);
+            }
+
+            Debug.Log("Completed heightmap");
+        }
 
         public float[,] GetNoiseMap(int xSize, int ySize)
         {
             float[,] noiseMap = SimplexNoise.CalcOctaved2D(xSize, ySize, octaves, frequency, heightExponent);
             ArrayHelpers.NormalizeArray2D(noiseMap, 0, 1);
             return noiseMap;
-        }
-
-
-        public float[,] GenerateHeightmap(int xSize, int ySize, int randSeed)
-        {
-            float[,] heightMap = SimplexNoise.CalcOctaved2D(xSize, ySize, octaves, frequency, heightExponent);
-            ArrayHelpers.NormalizeArray2D(heightMap, 0, 1);
-
-            if (useWaterErosion)
-                heightMap = WaterDropEroder.MakeEroded(heightMap, waterSettings, waterDropsToErode);
-
-            //ArrayHelpers.NormalizeArray2D(map, 0, 1);
-
-            Debug.Log("Completed heightmap");
-            return heightMap;
         }
 
 
@@ -132,6 +150,12 @@ namespace ATE.TerrainGen
                     break;
                 case TexturingTypes.AltitudeWithSteepness:
                     TexturingMethod = GetColor_AltWithSteep;
+                    break;
+                case TexturingTypes.Eroded:
+                    TexturingMethod = GetColor_Eroded;
+                    break;
+                case TexturingTypes.DirtDeposited:
+                    TexturingMethod = GetColor_DirtDeposited;
                     break;
             }
 
@@ -184,7 +208,7 @@ namespace ATE.TerrainGen
         private Color GetColor_Steepness(float[,] heightmap, int x, int y)
         {
             float steepness = GetSteepness(x, y);
-            steepness = Mathf.Pow(steepness, 2);
+            steepness = Mathf.Pow(steepness, texture_steepnessPow);
             return (Color.white * (1 - steepness)) + (Color.red * steepness);
         }
 
@@ -193,10 +217,20 @@ namespace ATE.TerrainGen
             Color altColor = GetColor_AltitudeCutoff(heightmap, x, y);
 
             float steepness = GetSteepness(x, y);
-            //steepness = Mathf.Pow(steepness, 2);
-            //return (altColor * (1 - steepness)) + (Color.gray * steepness);
 
             return steepness > 0.65f ? Color.gray : altColor;
+        }
+
+        private Color GetColor_Eroded(float[,] heightmap, int x, int y)
+        {
+            float eroded = Mathf.Min(1, (map[y, x][TerrainValTypes.Eroded] * texture_erodedMult));
+            return (Color.white * (1 - eroded)) + (Color.red * eroded);
+        }
+
+        private Color GetColor_DirtDeposited(float[,] heightmap, int x, int y)
+        {
+            float dirt = Mathf.Min(1, (map[y, x][TerrainValTypes.Dirt] * texture_dirtMult));
+            return (Color.white * (1 - dirt)) + (Color.green * dirt);
         }
 
 
@@ -207,6 +241,12 @@ namespace ATE.TerrainGen
             float yPos = (float)y / (resolution - 1);
 
             return terrain.terrainData.GetSteepness(xPos, yPos) / 90;
+        }
+
+
+        public TerrainCell this[int y, int x]
+        {
+            get => map[y, x];
         }
 
     }

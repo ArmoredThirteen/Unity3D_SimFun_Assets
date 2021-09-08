@@ -19,6 +19,12 @@ namespace ATE.TerrainGen
         }
 
 
+        public float GroundHeight
+        {
+            get { return Rock + Dirt; }
+        }
+
+
         public float Rock
         {
             get { return this[TerrainValTypes.Rock]; }

@@ -7,6 +7,48 @@ namespace ATE
 {
 	public static class ArrayHelpers
 	{
+        public static float GetHighest(float[,] theAra)
+        {
+            float returnVal = float.MinValue;
+
+            for (int y = 0; y < theAra.GetLength(0); y++)
+                for (int x = 0; x < theAra.GetLength(1); x++)
+                    if (theAra[y, x] > returnVal)
+                        returnVal = theAra[y, x];
+
+            return returnVal;
+        }
+
+        public static float GetLowest(float[,] theAra)
+        {
+            float returnVal = float.MaxValue;
+
+            for (int y = 0; y < theAra.GetLength(0); y++)
+                for (int x = 0; x < theAra.GetLength(1); x++)
+                    if (theAra[y, x] < returnVal)
+                        returnVal = theAra[y, x];
+
+            return returnVal;
+        }
+
+        public static float GetAverageOfNonZero(float[,] theAra)
+        {
+            float returnVal = 0;
+            int valsFound = 0;
+
+            for (int y = 0; y < theAra.GetLength(0); y++)
+                for (int x = 0; x < theAra.GetLength(1); x++)
+                    if (theAra[y, x] > 0)
+                    {
+                        returnVal += theAra[y, x];
+                        valsFound++;
+                    }
+
+
+            return returnVal / valsFound;
+        }
+
+
         public static Vector2 GetRandomIndex(float[,] theAra)
         {
             int xPos = Random.Range(0, theAra.GetLength(1) - 1);

@@ -253,7 +253,14 @@ MonoBehaviour:
   useWaterErosion: 1
   waterSettings: {fileID: 11400000, guid: b7cd95bf7d8604240b2130afe0cb1042, type: 2}
   waterDropsToErode: 1500000
-  texturingType: 2
+  texturingType: 4
+  texture_steepnessPow: 2
+  texture_erodedMult: 15
+  texture_dirtMult: 1000
+  texture_altCutoff_blue: 0.05
+  texture_altCutoff_yellow: 0.1
+  texture_altCutoff_red: 0.2
+  texture_altCutoff_green: 0.6
 --- !u!154 &895441988
 TerrainCollider:
   m_ObjectHideFlags: 0
