@@ -19,6 +19,7 @@ namespace ATE.TerrainGen
         }
 
 
+        public int resolution = 512;
         public Terrain terrain;
 
         public int seed = 0;
@@ -33,23 +34,48 @@ namespace ATE.TerrainGen
         public TexturingTypes texturingType = TexturingTypes.Steepness;
 
 
-        private float[,] heightMap;
+        private TerrainCell[,] map;
+
+
+        private float[,] GetAraOfType(TerrainValTypes valType)
+        {
+            float[,] ara = new float[resolution, resolution];
+
+            for (int y = 0; y < resolution; y++)
+                for (int x = 0; x < resolution; x++)
+                    ara[y, x] = map[y, x][valType];
+
+            return ara;
+        }
+
+        private void SetValsOfType(TerrainValTypes valType, float[,] ara)
+        {
+            for (int y = 0; y < resolution; y++)
+                for (int x = 0; x < resolution; x++)
+                    map[y, x][valType] = ara[y, x];
+        }
 
 
         [ContextMenu("Generate")]
         public void Generate()
         {
-            int resolution = terrain.terrainData.heightmapResolution;
-
+            map = new TerrainCell[resolution, resolution];
+            for (int y = 0; y < resolution; y++)
+                for (int x = 0; x < resolution; x++)
+                    map[y, x] = new TerrainCell(0);
+            
+            //resolution = terrain.terrainData.heightmapResolution;
+            terrain.terrainData.heightmapResolution = resolution;
+            
             // Find and set seeds
             int randSeed = seed > 0 ? seed : Random.Range(int.MinValue, int.MaxValue);
             Random.InitState(randSeed);
             SimplexNoise.Seed = randSeed;
-
+            
             // Build and apply height map
-            heightMap = GenerateHeightmap(resolution, resolution, randSeed);
-            terrain.terrainData.SetHeights(0, 0, heightMap);
-
+            SetValsOfType(TerrainValTypes.Rock, GenerateHeightmap(resolution, resolution, randSeed));
+            terrain.terrainData.SetHeights(0, 0, GetAraOfType(TerrainValTypes.Rock));
+            
             // Build and apply height texture
             GenAndApplyTexture();
 
@@ -59,18 +85,27 @@ namespace ATE.TerrainGen
             UnityEditor.SceneManagement.EditorSceneManager.MarkSceneDirty(currScene);
         }
 
+
+        public float[,] GetNoiseMap(int xSize, int ySize)
+        {
+            float[,] noiseMap = SimplexNoise.CalcOctaved2D(xSize, ySize, octaves, frequency, heightExponent);
+            ArrayHelpers.NormalizeArray2D(noiseMap, 0, 1);
+            return noiseMap;
+        }
+
+
         public float[,] GenerateHeightmap(int xSize, int ySize, int randSeed)
         {
-            float[,] map = SimplexNoise.CalcOctaved2D(xSize, ySize, octaves, frequency, heightExponent);
-            ArrayHelpers.NormalizeArray2D(map, 0, 1);
+            float[,] heightMap = SimplexNoise.CalcOctaved2D(xSize, ySize, octaves, frequency, heightExponent);
+            ArrayHelpers.NormalizeArray2D(heightMap, 0, 1);
 
             if (useWaterErosion)
-                map = WaterDropEroder.MakeEroded(map, waterSettings, waterDropsToErode);
+                heightMap = WaterDropEroder.MakeEroded(heightMap, waterSettings, waterDropsToErode);
 
             //ArrayHelpers.NormalizeArray2D(map, 0, 1);
 
             Debug.Log("Completed heightmap");
-            return map;
+            return heightMap;
         }
 
 
@@ -81,7 +116,7 @@ namespace ATE.TerrainGen
             terrain.terrainData.terrainLayers[0].diffuseTexture = texture;
         }
 
-        public Texture2D GenerateTexture(/*float[,] heightMap*/)
+        public Texture2D GenerateTexture()
         {
             Func<float[,], int, int, Color> TexturingMethod = GetColor_White;
             switch (texturingType)
@@ -111,9 +146,10 @@ namespace ATE.TerrainGen
             texture.Resize(resolution, resolution);
 
             // Color each pixel
+            float[,] heightmap = GetAraOfType(TerrainValTypes.Rock);
             for (int y = 0; y < resolution; y++)
                 for (int x = 0; x < resolution; x++)
-                    texture.SetPixel(x, y, TexturingMethod(heightMap, x, y));
+                    texture.SetPixel(x, y, TexturingMethod(heightmap, x, y));
 
             texture.Apply();
 
@@ -122,15 +158,15 @@ namespace ATE.TerrainGen
         }
 
 
-        private Color GetColor_White(float[,] map, int x, int y)
+        private Color GetColor_White(float[,] heightmap, int x, int y)
         {
             return Color.white;
         }
 
-        private Color GetColor_AltitudeCutoff(float[,] map, int x, int y)
+        private Color GetColor_AltitudeCutoff(float[,] heightmap, int x, int y)
         {
             // Get scaled height
-            float height = map[y, x];
+            float height = heightmap[y, x];
 
             // Determine color
             Color color = Color.white;
@@ -147,16 +183,16 @@ namespace ATE.TerrainGen
             return color;
         }
 
-        private Color GetColor_Steepness(float[,] map, int x, int y)
+        private Color GetColor_Steepness(float[,] heightmap, int x, int y)
         {
             float steepness = GetSteepness(x, y);
             steepness = Mathf.Pow(steepness, 2);
             return (Color.white * (1 - steepness)) + (Color.red * steepness);
         }
 
-        private Color GetColor_AltWithSteep(float[,] map, int x, int y)
+        private Color GetColor_AltWithSteep(float[,] heightmap, int x, int y)
         {
-            Color altColor = GetColor_AltitudeCutoff(map, x, y);
+            Color altColor = GetColor_AltitudeCutoff(heightmap, x, y);
 
             float steepness = GetSteepness(x, y);
             //steepness = Mathf.Pow(steepness, 2);

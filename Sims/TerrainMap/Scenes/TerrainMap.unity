@@ -244,6 +244,7 @@ MonoBehaviour:
   m_Script: {fileID: 11500000, guid: 8d618d12b07474048a21dc3e3a5eb6ac, type: 3}
   m_Name: 
   m_EditorClassIdentifier: 
+  resolution: 512
   terrain: {fileID: 895441989}
   seed: 1
   octaves: 5
