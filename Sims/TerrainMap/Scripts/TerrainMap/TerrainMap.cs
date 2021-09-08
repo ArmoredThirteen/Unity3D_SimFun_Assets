@@ -34,7 +34,7 @@ namespace ATE.TerrainGen
         public TexturingTypes texturingType = TexturingTypes.Steepness;
 
 
-        private TerrainCell[,] map;
+        public TerrainCell[,] map;
 
 
         private float[,] GetAraOfType(TerrainValTypes valType)
@@ -141,7 +141,6 @@ namespace ATE.TerrainGen
             terrain.terrainData.terrainLayers[0].tileSize = new Vector2(width, length);
 
             // Set texture size to match terrain resolution / heightmap size
-            int resolution = terrain.terrainData.heightmapResolution;
             Texture2D texture = terrain.terrainData.terrainLayers[0].diffuseTexture;
             texture.Resize(resolution, resolution);
 
@@ -165,7 +164,6 @@ namespace ATE.TerrainGen
 
         private Color GetColor_AltitudeCutoff(float[,] heightmap, int x, int y)
         {
-            // Get scaled height
             float height = heightmap[y, x];
 
             // Determine color
