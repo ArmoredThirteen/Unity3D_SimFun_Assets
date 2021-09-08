@@ -15,6 +15,7 @@ namespace ATE.TerrainGen
             values = new Dictionary<TerrainValTypes, float>();
             this[TerrainValTypes.Rock] = rock;
             this[TerrainValTypes.Dirt] = 0;
+            this[TerrainValTypes.Eroded] = 0;
         }
 
 
@@ -28,6 +29,12 @@ namespace ATE.TerrainGen
         {
             get { return this[TerrainValTypes.Dirt]; }
             set { this[TerrainValTypes.Dirt] = value; }
+        }
+
+        public float Eroded
+        {
+            get { return this[TerrainValTypes.Eroded]; }
+            set { this[TerrainValTypes.Eroded] = value; }
         }
 
 
@@ -59,12 +66,15 @@ namespace ATE.TerrainGen
 
             amount -= Dirt;
             Dirt = 0;
+
             Rock -= amount;
+            Eroded += amount;
         }
 
         public void AddGround(float amount)
         {
             Dirt += amount;
+            Eroded -= amount;
         }
 
 
