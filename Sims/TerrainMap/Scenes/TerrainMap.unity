@@ -247,9 +247,8 @@ MonoBehaviour:
   resolution: 512
   terrain: {fileID: 895441989}
   seed: 1
-  octaves: 5
-  frequency: 2
-  heightExponent: 3
+  simplexGroundSettings: {fileID: 11400000, guid: c2d05a914eb0a6c4890119f22a43d0c8,
+    type: 2}
   useWaterErosion: 1
   waterSettings: {fileID: 11400000, guid: b7cd95bf7d8604240b2130afe0cb1042, type: 2}
   waterDropsToErode: 1500000

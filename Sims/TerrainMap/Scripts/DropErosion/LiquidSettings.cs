@@ -5,7 +5,7 @@ using UnityEngine;
 
 namespace ATE.TerrainGen
 {
-    [CreateAssetMenu(fileName = "Liquid_", menuName = "ScriptableObjects/SpawnLiquidSettings", order = 1)]
+    [CreateAssetMenu(fileName = "Liquid_", menuName = "ScriptableObjects/LiquidSettings", order = 1)]
     public class LiquidSettings : ScriptableObject
 	{
         public int maxLifetime = 25;

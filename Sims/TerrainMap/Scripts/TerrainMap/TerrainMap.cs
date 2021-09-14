@@ -25,9 +25,8 @@ namespace ATE.TerrainGen
         public Terrain terrain;
 
         public int seed = 0;
-        public int octaves = 1;
-        public float frequency = 1;
-        public float heightExponent = 1;
+
+        public SimplexOctavesSettings simplexGroundSettings;
 
         public bool useWaterErosion = true;
         public LiquidSettings waterSettings;
@@ -57,7 +56,7 @@ namespace ATE.TerrainGen
             return ara;
         }
 
-        private void SetValsOfType(TerrainValTypes valType, float[,] ara)
+        public void SetValsOfType(TerrainValTypes valType, float[,] ara)
         {
             for (int y = 0; y < resolution; y++)
                 for (int x = 0; x < resolution; x++)
@@ -68,22 +67,18 @@ namespace ATE.TerrainGen
         [ContextMenu("Generate")]
         public void Generate()
         {
-            map = new TerrainCell[resolution, resolution];
-            for (int y = 0; y < resolution; y++)
-                for (int x = 0; x < resolution; x++)
-                    map[y, x] = new TerrainCell(0);
-            
-            //resolution = terrain.terrainData.heightmapResolution;
-            terrain.terrainData.heightmapResolution = resolution;
-            
             // Find and set seeds
             int randSeed = seed > 0 ? seed : Random.Range(int.MinValue, int.MaxValue);
             Random.InitState(randSeed);
             SimplexNoise.Seed = randSeed;
 
-            // Build and apply height map
-            //SetValsOfType(TerrainValTypes.Rock, GenerateHeightmap(resolution, resolution, randSeed));
-            GenerateHeightmap();
+            GroundGen_SimplexOctaves groundGen = new GroundGen_SimplexOctaves(this);
+            WaterDropEroder eroder = new WaterDropEroder(this);
+
+            groundGen.RegenerateGround(simplexGroundSettings);
+
+            if (useWaterErosion)
+                eroder.MakeEroded(waterSettings, waterDropsToErode);
 
             float[,] heightmap = GetAraOfType(TerrainValTypes.Rock);
             heightmap.Zip(GetAraOfType(TerrainValTypes.Dirt), (x, y) => x + y);
@@ -103,27 +98,17 @@ namespace ATE.TerrainGen
             UnityEngine.SceneManagement.Scene currScene = UnityEditor.SceneManagement.EditorSceneManager.GetActiveScene();
             UnityEditor.SceneManagement.EditorSceneManager.MarkSceneDirty(currScene);
         }
-        
 
-        public void GenerateHeightmap()
+
+        public void ResetMap()
         {
-            float[,] noiseMap = GetNoiseMap(resolution, resolution);
-            SetValsOfType(TerrainValTypes.Rock, noiseMap);
+            map = new TerrainCell[resolution, resolution];
+            for (int y = 0; y < resolution; y++)
+                for (int x = 0; x < resolution; x++)
+                    map[y, x] = new TerrainCell(0);
 
-            if (useWaterErosion)
-            {
-                WaterDropEroder eroder = new WaterDropEroder(this);
-                eroder.MakeEroded(waterSettings, waterDropsToErode);
-            }
-
-            Debug.Log("Completed heightmap");
-        }
-
-        public float[,] GetNoiseMap(int xSize, int ySize)
-        {
-            float[,] noiseMap = SimplexNoise.CalcOctaved2D(xSize, ySize, octaves, frequency, heightExponent);
-            ArrayHelpers.NormalizeArray2D(noiseMap, 0, 1);
-            return noiseMap;
+            //resolution = terrain.terrainData.heightmapResolution;
+            terrain.terrainData.heightmapResolution = resolution;
         }
 
 
@@ -132,6 +117,10 @@ namespace ATE.TerrainGen
         {
             Texture2D texture = GenerateTexture();
             terrain.terrainData.terrainLayers[0].diffuseTexture = texture;
+            
+            // Save changes to disk
+            string texturePath = UnityEditor.AssetDatabase.GetAssetPath(terrain.terrainData.terrainLayers[0].diffuseTexture);
+            System.IO.File.WriteAllBytes(texturePath, texture.EncodeToPNG());
         }
 
         public Texture2D GenerateTexture()
@@ -175,8 +164,6 @@ namespace ATE.TerrainGen
                     texture.SetPixel(x, y, TexturingMethod(heightmap, x, y));
 
             texture.Apply();
-
-            Debug.Log("Completed texture");
             return texture;
         }
 
