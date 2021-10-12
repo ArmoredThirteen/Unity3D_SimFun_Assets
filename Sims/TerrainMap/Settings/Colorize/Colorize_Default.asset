@@ -13,8 +13,9 @@ MonoBehaviour:
   m_Name: Colorize_Default
   m_EditorClassIdentifier: 
   steepnessPower: 2
+  steepnessCutoff: 0.6
   erodedMultiplier: 15
-  dirtMultiplier: 100
+  dirtMultiplier: 1000
   altCutoff_blue: 0.05
   altCutoff_yellow: 0.1
   altCutoff_red: 0.2
