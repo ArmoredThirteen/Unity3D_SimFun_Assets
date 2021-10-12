@@ -1,7 +1,7 @@
 ﻿// Simplex Noise for C#
 // Copyright © Benjamin Ward 2019
 // See LICENSE
-// Simplex Noise implementation offering 1D, 2D, and 3D forms w/ values in the range of 0 to 255.
+// Simplex Noise implementation offering 1D, 2D, and 3D forms w/ values in the range of 0 to 1.
 // Based on work by Heikki Törmälä (2012) and Stefan Gustavson (2006).
 
 using System;
@@ -13,6 +13,40 @@ using System;
 /// </summary>
 public static class SimplexNoise
 {
+    #region AddedByATE
+    public static float[,] CalcOctaved2D(int xSize, int ySize, int octaves, float frequency, float heightExponent)
+    {
+        float[,] map = new float[ySize, xSize];
+
+        // Generate noise per pixel
+        for (int y = 0; y < ySize; y++)
+            for (int x = 0; x < xSize; x++)
+            {
+                float nX = ((float)x / xSize);
+                float nY = ((float)y / ySize);
+
+                float height = 0;
+                float amplitudeSum = 0;
+
+                // For each octave
+                for (int oct = 0; oct < octaves; oct++)
+                {
+                    float frequencyMult = UnityEngine.Mathf.Pow(2, oct);
+                    float amplitude = 1.0f / frequencyMult;
+                    amplitudeSum += amplitude;
+
+                    height += CalcPixel2D(nX, nY, frequency * frequencyMult) * amplitude;
+                }
+
+                height = UnityEngine.Mathf.Pow(height / amplitudeSum, heightExponent);
+                map[y, x] = height;
+            }
+
+        return map;
+    }
+    #endregion
+
+
     public static float[] Calc1D(int width, float scale)
     {
         var values = new float[width];
@@ -42,12 +76,12 @@ public static class SimplexNoise
 
     public static float CalcPixel1D(float x, float scale)
     {
-        return Generate (x * scale) * 0.5f + 0.5f;
+        return Generate(x * scale) * 0.5f + 0.5f;
     }
 
     public static float CalcPixel2D(float x, float y, float scale)
     {
-        return Generate (x * scale, y * scale);// * 0.5f + 0.5f;
+        return Generate(x * scale, y * scale) * 0.5f + 0.5f;
     }
 
     public static float CalcPixel3D(float x, float y, float z, float scale)

@@ -149,7 +149,7 @@ Light:
   serializedVersion: 10
   m_Type: 1
   m_Shape: 0
-  m_Color: {r: 1, g: 0.95686275, b: 0.8392157, a: 1}
+  m_Color: {r: 1, g: 1, b: 1, a: 1}
   m_Intensity: 1
   m_Range: 10
   m_SpotAngle: 30
@@ -244,11 +244,22 @@ MonoBehaviour:
   m_Script: {fileID: 11500000, guid: 8d618d12b07474048a21dc3e3a5eb6ac, type: 3}
   m_Name: 
   m_EditorClassIdentifier: 
+  resolution: 512
   terrain: {fileID: 895441989}
-  heightSeed: 0
-  heightScale: 2.5
-  heightOctaves: 5
-  heightExponent: 1.75
+  seed: 1
+  simplexGroundSettings: {fileID: 11400000, guid: c2d05a914eb0a6c4890119f22a43d0c8,
+    type: 2}
+  useWaterErosion: 0
+  waterSettings: {fileID: 11400000, guid: b7cd95bf7d8604240b2130afe0cb1042, type: 2}
+  waterDropsToErode: 1000000
+  texturingType: 1
+  texture_steepnessPow: 1.5
+  texture_erodedMult: 15
+  texture_dirtMult: 1000
+  texture_altCutoff_blue: 0.05
+  texture_altCutoff_yellow: 0.1
+  texture_altCutoff_red: 0.2
+  texture_altCutoff_green: 0.6
 --- !u!154 &895441988
 TerrainCollider:
   m_ObjectHideFlags: 0
@@ -383,10 +394,10 @@ Transform:
   m_PrefabInstance: {fileID: 0}
   m_PrefabAsset: {fileID: 0}
   m_GameObject: {fileID: 1408591378}
-  m_LocalRotation: {x: 0, y: 0, z: 0, w: 1}
-  m_LocalPosition: {x: 0, y: 1, z: -10}
+  m_LocalRotation: {x: 0.38530132, y: -0, z: -0, w: 0.9227909}
+  m_LocalPosition: {x: 250, y: 326.1, z: -157.8}
   m_LocalScale: {x: 1, y: 1, z: 1}
   m_Children: []
   m_Father: {fileID: 0}
   m_RootOrder: 0
-  m_LocalEulerAnglesHint: {x: 0, y: 0, z: 0}
+  m_LocalEulerAnglesHint: {x: 45.325, y: 0, z: 0}

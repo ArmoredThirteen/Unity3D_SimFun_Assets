@@ -42,7 +42,7 @@ namespace MazeGen.Processing
             map = theMap;
             previousPath = new Stack<MoveDirs2D> ();
             isVisited = new CellArray2D_BitArray (theMap.sizeX, theMap.sizeY, 1);
-            rand = new Random (0);
+            rand = new Random ();
             dirs = new MoveDirs2D[] { MoveDirs2D.UpX, MoveDirs2D.DownX, MoveDirs2D.UpY, MoveDirs2D.DownY };
         }
 
