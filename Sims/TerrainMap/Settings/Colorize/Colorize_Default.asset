@@ -1,0 +1,21 @@
+%YAML 1.1
+%TAG !u! tag:unity3d.com,2011:
+--- !u!114 &11400000
+MonoBehaviour:
+  m_ObjectHideFlags: 0
+  m_CorrespondingSourceObject: {fileID: 0}
+  m_PrefabInstance: {fileID: 0}
+  m_PrefabAsset: {fileID: 0}
+  m_GameObject: {fileID: 0}
+  m_Enabled: 1
+  m_EditorHideFlags: 0
+  m_Script: {fileID: 11500000, guid: fec93fb67428e214681c2712b6909b07, type: 3}
+  m_Name: Colorize_Default
+  m_EditorClassIdentifier: 
+  steepnessPower: 2
+  erodedMultiplier: 15
+  dirtMultiplier: 100
+  altCutoff_blue: 0.05
+  altCutoff_yellow: 0.1
+  altCutoff_red: 0.2
+  altCutoff_green: 0.6

@@ -249,11 +249,11 @@ MonoBehaviour:
   seed: 1
   simplexGroundSettings: {fileID: 11400000, guid: c2d05a914eb0a6c4890119f22a43d0c8,
     type: 2}
-  useWaterErosion: 1
+  useWaterErosion: 0
   waterSettings: {fileID: 11400000, guid: b7cd95bf7d8604240b2130afe0cb1042, type: 2}
-  waterDropsToErode: 1500000
-  texturingType: 4
-  texture_steepnessPow: 2
+  waterDropsToErode: 1000000
+  texturingType: 1
+  texture_steepnessPow: 1.5
   texture_erodedMult: 15
   texture_dirtMult: 1000
   texture_altCutoff_blue: 0.05

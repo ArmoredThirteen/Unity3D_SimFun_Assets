@@ -5,7 +5,7 @@ using UnityEngine;
 
 namespace ATE.TerrainGen
 {
-	public class GroundGen_SimplexOctaves : GroundGen
+	public class GroundGen_SimplexOctaves
 	{
         private TerrainMap map;
 
