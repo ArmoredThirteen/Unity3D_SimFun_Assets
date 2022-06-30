@@ -47,8 +47,7 @@ namespace ATE.TerrainGen
         }
 
 
-        [ContextMenu("Generate")]
-        public void Generate()
+        public void GenerateFull()
         {
             // Find and set seeds
             int randSeed = seed > 0 ? seed : Random.Range(int.MinValue, int.MaxValue);
@@ -74,7 +73,7 @@ namespace ATE.TerrainGen
             //Debug.Log("Highest: " + highest + ", Lowest: " + lowest + ", Average: " + average);
 
             // Build and apply height texture
-            GenAndApplyTexture();
+            GenTexture();
 
             // Set scene dirty for saving
             UnityEditor.EditorUtility.SetDirty(this.gameObject);
@@ -95,8 +94,7 @@ namespace ATE.TerrainGen
         }
 
 
-        [ContextMenu("Generate Texture")]
-        public void GenAndApplyTexture()
+        public void GenTexture()
         {
             Colorizer colorizer = new Colorizer(colorizeSettings, this, terrain);
             Texture2D texture = colorizer.GenerateTexture(colorizeType);
