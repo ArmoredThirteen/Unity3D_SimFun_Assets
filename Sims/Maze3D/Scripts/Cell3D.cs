@@ -25,6 +25,8 @@ namespace ATE
 		public CellWall yWall;
 		public CellWall zWall;
 
+		public CellWall solveIndicator;
+
 
 		public Vector3Int GetGraphLocation(Vector3 graphToWorldScale)
         {
@@ -43,6 +45,10 @@ namespace ATE
 			zWall.SetWall(setToWalled);
 		}
 
+		public void SetSolveIndicator(bool setToPartOfSolve)
+        {
+			solveIndicator.SetWall(setToPartOfSolve);
+        }
 
 	}
 }

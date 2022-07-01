@@ -48,28 +48,6 @@ namespace ATE
 			return neighbors;
 		}
 
-		/*public List<Cell3D> GetNeighborsAt(Vector3Int loc)
-        {
-			List<Cell3D> neighbors = new List<Cell3D>();
-
-			List<Vector3Int> mods = new List<Vector3Int>();
-			mods.Add(new Vector3Int(1, 0, 0));
-			mods.Add(new Vector3Int(-1, 0, 0));
-			mods.Add(new Vector3Int(0, 1, 0));
-			mods.Add(new Vector3Int(0, -1, 0));
-			mods.Add(new Vector3Int(0, 0, 1));
-			mods.Add(new Vector3Int(0, 0, -1));
-
-			for (int i = 0; i < mods.Count; i++)
-            {
-				Vector3Int neighborLoc = loc + mods[i];
-				if (cells.ContainsKey(neighborLoc))
-					neighbors.Add(cells[neighborLoc]);
-            }
-
-			return neighbors;
-		}*/
-
 
 		public void GatherChildrenAsCells()
         {
@@ -82,11 +60,18 @@ namespace ATE
         }
 
 		public void ResetCellWalls()
-        {
+		{
 			List<Cell3D> cellValues = cells.Values.ToList();
 			for (int i = 0; i < cellValues.Count; i++)
 				cellValues[i].SetWalls(true);
-        }
-		
+		}
+
+		public void ResetCellSolveIndicators()
+		{
+			List<Cell3D> cellValues = cells.Values.ToList();
+			for (int i = 0; i < cellValues.Count; i++)
+				cellValues[i].SetSolveIndicator(false);
+		}
+
 	}
 }
