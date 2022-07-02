@@ -12,6 +12,7 @@ namespace ATE
 		public Cell3D startCell;
 		public Cell3D endCell;
 
+		public int avgBranchDistance = 5;
 		public int seed = 0;
 
 
@@ -28,11 +29,11 @@ namespace ATE
 		[ContextMenu("Generate and Solve Maze")]
 		public void GenerateAndSolveMaze()
         {
-			GenerateMaze();
+			GenerateBranchingMaze();
 			PrintSolveInfo();
         }
 
-		[ContextMenu("Generate Maze")]
+		/*[ContextMenu("Generate Maze")]
 		public void GenerateMaze()
         {
 			int realSeed = seed != 0 ? seed : System.DateTime.Now.Second;
@@ -66,6 +67,77 @@ namespace ATE
 				Cell3D currCell = maze.GetCellAt(currLoc);
 				Cell3D nextCell = maze.GetCellAt(nextLoc);
 				BreakWallBetween(currCell, nextCell);
+			}
+
+			EditorUtility.SetDirty(maze);
+		}*/
+
+		[ContextMenu("Generate Maze")]
+		public void GenerateBranchingMaze()
+        {
+			int realSeed = seed != 0 ? seed : System.DateTime.Now.Second;
+			Debug.Log("Generating with seed: " + realSeed);
+			Random.InitState(realSeed);
+
+			ResetMaze();
+
+			List<Stack<Vector3Int>> crawlers = new List<Stack<Vector3Int>>();
+			List<Vector3Int> visited = new List<Vector3Int>();
+
+			Vector3Int startLoc = startCell.GetGraphLocation(maze.graphToWorldScale);
+			crawlers.Add(new Stack<Vector3Int>());
+			crawlers[0].Push(startLoc);
+			visited.Add(startLoc);
+
+			while (crawlers.Count > 0 && crawlers[0].Count > 0)
+			{
+				// Potentially add new crawlers
+				int crawlerCount = crawlers.Count;
+				for (int i = 0; i < crawlerCount; i++)
+                {
+					if (Random.Range(0, avgBranchDistance) != 0)
+						continue;
+					
+					Vector3Int leadLoc = crawlers[i].Peek();
+					List<Vector3Int> neighbors = GetUnvisitedNeighbors(visited, leadLoc);
+					if (neighbors.Count <= 1)
+						continue;
+
+					Stack<Vector3Int> newCrawler = new Stack<Vector3Int>();
+
+					Vector3Int nextCrawlerHead = neighbors[Random.Range(0, neighbors.Count)];
+					newCrawler.Push(nextCrawlerHead);
+					visited.Add(nextCrawlerHead);
+
+					Cell3D currHead = maze.GetCellAt(crawlers[i].Peek());
+					Cell3D newHead = maze.GetCellAt(nextCrawlerHead);
+					BreakWallBetween(currHead, newHead);
+
+					crawlers.Add(newCrawler);
+				}
+
+				for (int i = 0; i < crawlers.Count; i++)
+				{
+					Stack<Vector3Int> crawler = crawlers[i];
+					Vector3Int currLoc = crawler.Pop();
+
+					List<Vector3Int> neighbors = GetUnvisitedNeighbors(visited, currLoc);
+
+					if (neighbors.Count <= 0)
+						continue;
+
+					Vector3Int nextLoc = neighbors[Random.Range(0, neighbors.Count)];
+
+					crawler.Push(currLoc);
+					crawler.Push(nextLoc);
+					visited.Add(nextLoc);
+
+					Cell3D currCell = maze.GetCellAt(currLoc);
+					Cell3D nextCell = maze.GetCellAt(nextLoc);
+					BreakWallBetween(currCell, nextCell);
+				}
+
+				crawlers.RemoveAll(c => c.Count <= 0);
 			}
 
 			EditorUtility.SetDirty(maze);
